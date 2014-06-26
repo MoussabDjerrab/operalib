@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def __init__(X1,X2,gamma=1):
+def trgauss(X1,X2,gamma=1):
     nrowX1 = np.size(X1[:,0])
     nrowX2 = np.size(X2[:,0])
     ncolX  = np.size(X1[0,:])

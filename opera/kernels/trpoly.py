@@ -1,6 +1,6 @@
 import numpy as np
 
-def __init__(X1,X2,c=0,d=1):
+def trpoly(X1,X2,c=0,d=1):
     nrowX1 = X1.shape[0]
     nrowX2 = X2.shape[0]
     ncolX  = X1.shape[1]

@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 
-def __init__(gradient,norm='L1',mu=1,L=1,n=1):
+def proximal(gradient,norm='L1',mu=1,L=1,n=1):
     p = len(gradient)/n
     Sol = np.zeros(len(gradient))
     if norm.upper() == 'L1' : 

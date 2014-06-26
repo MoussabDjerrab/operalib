@@ -1,9 +1,9 @@
 import numpy as np
-from proximal import __init__ as proximal
+from proximal import proximal
 import numpy.linalg as LA
 
 
-def __init__(gradient,L,init=None,objective=None,maxiters=100,norm='L1',mu=1,n=1,eps=1.e-3):
+def proximalGeneral(gradient,L,init=None,objective=None,maxiters=100,norm='L1',mu=1,n=1,eps=1.e-3):
     if init is None : 
         print "proximalGeneral algorithm need an initial vector"
         return None

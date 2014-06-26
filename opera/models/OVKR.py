@@ -6,6 +6,7 @@ Created on Jun 18, 2014
 
 from .OPERAObject import OPERAObject
 import numpy as np
+import opera.kernels as kernels
 
 def grid_search(X,y,nbloc=5,parameters={}):
     bestscore = float("inf")
@@ -82,6 +83,8 @@ class OVKR(OPERAObject):
         self.muH = muH
         self.muC = muC
         self.normC = normC
+        self.kernel_function = kernels.chooseFunctionKernel(ovkernel, kernel, c, d, gamma, B)
+
     
     def fit(self, X, y, kwargs=None):
         """Method to fit a model
@@ -92,7 +95,7 @@ class OVKR(OPERAObject):
             kwargs    optional data-dependent parameters.
         """
         OPERAObject.fit(self, X, y, kwargs)
-        self.computeKernel(self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B)
+        self.K = self.kernel_function(X,X,y)
         self.learnC(K=self.K,Y=self.y,muH=self.muH,muC=self.muC,normC=self.normC)
         return
     
@@ -104,7 +107,7 @@ class OVKR(OPERAObject):
         Output
             y        array, with shape = [N,p], where N is the number of samples.
         """
-        Ktest = self.computeKernel(self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,Xtest=X)
+        Ktest = self.kernel_function(X,self.X,self.y)
         Cvec = np.reshape(self.C.T, (len(self.C[:,0])*len(self.C[0,:])))
         Yvec = np.dot(Ktest,Cvec)
         Y = np.reshape(Yvec,(len(Yvec)/len(self.C[0,:]),len(self.C[0,:])))

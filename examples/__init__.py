@@ -1,1 +1,2 @@
 # placeholder
+import opera

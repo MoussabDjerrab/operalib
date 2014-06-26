@@ -4,7 +4,7 @@ import scipy.io
 import time
 from opera.models import OVKR,OVKR_gridsearch
 
-#os.chdir("/home/lyx/")
+os.chdir("/home/lyx/")
 mat = scipy.io.loadmat('simdata.mat')
 X = mat.get('X')
 y = mat.get('Y')
@@ -38,7 +38,7 @@ elapse_time_cv = time.time()-t #16 s
 score_cv#0.56
 print "... %2dsec" % elapse_time_cv
 
-print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n" % (score_tra,score_cv)
+print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n\t sparsity of C      \t%s" % (score_tra,score_cv,float((obj.C == 0).sum())/obj.C.size*100) + '%'
 
 
 # grid example
@@ -59,6 +59,6 @@ print "fit score and crossvalidation score's computation time ..."
 mdl.fit(X,y)
 gst = mdl.score(X,y)# 0.00015
 gscv = mdl.crossvalidationscore(X, y, 5)# 0.51
-print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n" % (gst,gscv)
+print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n\t sparsity of C      \t%s" % (gst,gscv,float((obj.C == 0).sum())/mdl.C.size*100) + '%'
 
 

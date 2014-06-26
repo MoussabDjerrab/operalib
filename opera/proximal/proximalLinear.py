@@ -1,5 +1,5 @@
 import numpy as np
-from proximalGeneral import __init__ as proximalGeneral
+from proximalGeneral import proximalGeneral
 from scipy.sparse import linalg as LAs
 import numpy.linalg as LA
 
@@ -18,7 +18,7 @@ def normvector(x,norm="l1"):
         return np.mean((LA.norm(x,1),LA.norm(x,2)))
      
 
-def __init__(K, y, init=None, mu=1, muX=1, norm='l1', maxiters=100, n=1, eps=1.e-3):
+def proximalLinear(K, y, init=None, mu=1, muX=1, norm='l1', maxiters=100, n=1, eps=1.e-3):
     """ABSTRACT : Learning x with a norm constraint on the coefficients
     REFERENCE : Beck and Teboulle (2010) Gradient-based algorithms with applications to signal-recovery problems
     INPUTS :

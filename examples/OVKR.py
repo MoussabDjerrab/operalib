@@ -4,7 +4,7 @@ import scipy.io
 import time
 from opera.models import OVKR,OVKR_gridsearch
 
-#os.chdir("/home/lyx/")
+os.chdir("/home/lyx/")
 mat = scipy.io.loadmat('simdata.mat')
 X = mat.get('X')
 y = mat.get('Y')
@@ -28,7 +28,7 @@ obj.fit(X,y)
 elapse_time_fit = time.time()-t #11.25 s
 yt = obj.predict(X)
 score_tra = obj.score(X,y)#0.001
-print "... %2dsec" % elapse_time_fit
+print "... %dsec" % elapse_time_fit
 
 print "cross validation score's computation time ..."
 # crossvalidation score example
@@ -36,9 +36,9 @@ t = time.time()
 score_cv = obj.crossvalidationscore(X, y, 5)
 elapse_time_cv = time.time()-t #16 s
 score_cv#0.56
-print "... %2dsec" % elapse_time_cv
+print "... %dsec" % elapse_time_cv
 
-print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n" % (score_tra,score_cv)
+print "the object is fitted\n\t training error     \t\t%2.5f\n\t testing error (cv)\t\t%2.5f\n\t sparsity of C      \t%2.2f" % (score_tra,score_cv,float((obj.C == 0).sum())/obj.C.size*100) + '%'
 
 
 # grid example
@@ -52,13 +52,13 @@ print "grid search's computation time ..."
 t = time.time()
 mdl = OVKR_gridsearch(X, y, 5, params)
 elapse_time_grid = time.time()-t #93 sec
-print "... %2dsec" % elapse_time_grid
+print "... %dsec" % elapse_time_grid
 print "The object selected is : "
 mdl.getparameter(show=True)
 print "fit score and crossvalidation score's computation time ..."
 mdl.fit(X,y)
 gst = mdl.score(X,y)# 0.00015
 gscv = mdl.crossvalidationscore(X, y, 5)# 0.51
-print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n" % (gst,gscv)
+print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n\t sparsity of C      \t%2.2f" % (gst,gscv,float((obj.C == 0).sum())/mdl.C.size*100) + '%'
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-def __init__(X1,X2,c,d,B):
+def dcpoly(X1,X2,c,d,B):
     """ decomposable polynomial kernel B*k_gauss over the scalar gaussian """
     nrowX1 = np.size(X1[:,0])
     nrowX2 = np.size(X2[:,0])

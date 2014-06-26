@@ -24,7 +24,7 @@ def gaussparam(X,midkval=0.5):
     gamma = - np.log(midkval) / np.mean(D);
     return gamma
 
-def __init__(X1,X2,gamma,B):
+def dcgauss(X1,X2,gamma,B):
     """ decomposable gaussian kernel B*k_gauss over the scalar gaussian """
     nrowX1 = np.size(X1[:,0])
     nrowX2 = np.size(X2[:,0])
