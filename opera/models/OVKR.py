@@ -7,7 +7,6 @@ Created on Jun 18, 2014
 from .OPERAObject import OPERAObject
 import numpy as np
 
-
 def grid_search(X,y,nbloc=5,parameters={}):
     bestscore = float("inf")
     bestmodel = None
@@ -122,6 +121,7 @@ class OVKR(OPERAObject):
     def copy(self):
         return OVKR(ovkernel=self.ovkernel,kernel=self.kernel,c=self.c,d=self.d,gamma=self.gamma,B=self.B,muH=self.muH,muC=self.muC,normC=self.normC)
     
-    def getparameter(self):
-        return ["ovkernel","kernel","c","d","gamma","B","muH","muC","normC"]
-        
+    def getparameter(self,show=True):
+        if show :
+            print   "ovkernel  :\t %s\nkernel\t :\t %s\nc\t :\t %s\nd\t :\t %s\ngamma\t :\t %s\nB\t :\t %s\nmuH\t :\t %s\nmuC\t :\t %s\nnormC\t :\t %s\n"% (self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC)
+        return [self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC ]
