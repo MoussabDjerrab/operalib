@@ -128,3 +128,16 @@ class OVKR(OPERAObject):
         if show :
             print   "ovkernel  :\t %s\nkernel\t :\t %s\nc\t :\t %s\nd\t :\t %s\ngamma\t :\t %s\nB\t :\t %s\nmuH\t :\t %s\nmuC\t :\t %s\nnormC\t :\t %s\n"% (self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC)
         return [self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC ]
+
+    def setparam(self,name,val):
+        if   name == "ovkernel" : self.ovkernel = val
+        elif name == "kernel" : self.kernel = val
+        elif name == "c" :self.c = val
+        elif name == "d" :self.d = val
+        elif name == "gamma" :self.gamma = val
+        elif name == "B" : self.B = val
+        elif name == "muH" : self.muH = val
+        elif name == "muC" : self.muC = val
+        elif name == "normC" : self.normC = val
+        elif name == "kernel_function" : self.kernel_function = val
+        return 

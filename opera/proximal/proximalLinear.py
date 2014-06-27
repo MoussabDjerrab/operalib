@@ -43,5 +43,5 @@ def proximalLinear(K, y, init=None, mu=1, muX=1, norm='l1', maxiters=100, n=1, e
         return np.dot(K,np.dot(K+mu*np.identity(K.shape[0]),x)-y)       
     def objective(x):
         LA.norm(np.dot(K,x)-y)**2 + normvector(x)
-    return proximalGeneral(gradient,L,init=X,maxiters=maxiters,norm=norm,mu=mu,n=n,eps=eps)
+    return proximalGeneral(gradient,L,init=X,maxiters=maxiters,norm=norm,mu=muX,n=n,eps=eps)
     

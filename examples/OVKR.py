@@ -3,6 +3,9 @@ import os
 import scipy.io
 import time
 from opera.models import OVKR,OVKR_gridsearch
+from opera.utils.plot import plot_err
+from matplotlib import pyplot as plt
+import numpy as np
 
 os.chdir("/home/lyx/")
 mat = scipy.io.loadmat('simdata.mat')
@@ -12,8 +15,9 @@ y = mat.get('Y')
 ## OVKR TEST
 
 
+obj = OVKR(normC="L1",muH=0.001)
 
-obj = OVKR(normC="mixed",muH=0.001)
+
 
 print "Standard tests were performed with this object : \n"
 obj.getparameter(show=True)
@@ -60,5 +64,13 @@ mdl.fit(X,y)
 gst = mdl.score(X,y)# 0.00015
 gscv = mdl.crossvalidationscore(X, y, 5)# 0.51
 print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n\t sparsity of C      \t%2.2f" % (gst,gscv,float((obj.C == 0).sum())/mdl.C.size*100) + '%'
+
+
+# plot test
+obj.setparam("normC","L1")
+muCs = pow(2.,np.array([0,3,4,5,6,7,8]))
+plt.xscale('log')
+plot_err(obj,"muC",muCs,X,y,True)
+plt.show()
 
 
