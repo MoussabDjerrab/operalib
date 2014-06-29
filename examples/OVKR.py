@@ -16,8 +16,11 @@ y = mat.get('Y')
 
 
 obj = OVKR(normC="L1",muH=0.001)
-
-
+# plot test
+obj.setparam("normC","L1")
+muCs = pow(2.,np.array([0.1,0.5,0,3,4,5,6,7,8]))
+plot_err(obj,"muC",muCs,X,y,True,xscale='log')
+plt.show()
 
 print "Standard tests were performed with this object : \n"
 obj.getparameter(show=True)
@@ -66,11 +69,7 @@ gscv = mdl.crossvalidationscore(X, y, 5)# 0.51
 print "the object is fitted\n\t training error     \t%s\n\t testing error (cv)\t%s\n\t sparsity of C      \t%2.2f" % (gst,gscv,float((obj.C == 0).sum())/mdl.C.size*100) + '%'
 
 
-# plot test
-obj.setparam("normC","L1")
-muCs = pow(2.,np.array([0,3,4,5,6,7,8]))
-plt.xscale('log')
-plot_err(obj,"muC",muCs,X,y,True)
+
 plt.show()
 
 

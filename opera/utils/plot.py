@@ -1,14 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_err(obj,var,ensvar,X,y,sparcity=False):
+def plot_err(obj,var,ensvar,X,y,sparcity=False,xscale='log'):
     ensvar.sort()
+    fig,ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    ax1.set_xscale(xscale)
+    ax2.set_xscale(xscale)
+    ax1.set_ylabel("error")
+    ax1.set_xlabel(var)
     def f(x) : 
         obj.setparam(var,x)
         obj.fit(X,y)
         tra = obj.score(X,y)
         tes = obj.crossvalidationscore(X,y)
-        spar = float((obj.C == 0).sum())/obj.C.size
+        spar = float((obj.C == 0).sum())/obj.C.size * 100
         return (tra,tes,spar)
     train_err = []
     valid_err = []
@@ -18,20 +24,22 @@ def plot_err(obj,var,ensvar,X,y,sparcity=False):
         train_err.append(tra)
         valid_err.append(tes)
         sparc.append(spar)
-    plt.plot(ensvar,train_err,'x-')
-    plt.plot(ensvar,valid_err,'o-')
-    if sparcity : 
-        plt.plot(ensvar,sparc,'s-')
-        plt.legend(['training error','testing error','sparcity of C (proportion)'],'best')
-    else : 
-        plt.legend(['training error','testing error'],'best')
+    ax1.plot(ensvar,train_err,'o-',color='g')
+    ax1.plot(ensvar,valid_err,'s-',color='r')
+    if sparcity :
+        ax2.set_ylabel("sparcity of C (%)",color='#AFAFAF') 
+        ax2.plot(ensvar,sparc,'x-',color='#AFAFAF')
+        for tl in ax2.get_yticklabels():
+            tl.set_color('#AFAFAF')
+
+    ax1.legend(['training error','testing error'],'best')
     
     xmin = ensvar[(np.array(valid_err)).argmin()]
     ymin = (np.array(valid_err)).min()
-    (axm,_,aym,_)  = plt.axis()
-    plt.plot([xmin,xmin],[aym,ymin],'--b')
-    plt.plot([axm,xmin],[ymin,ymin],'--b')
-    plt.xlabel(var)
-    plt.ylabel("error")
+    (axm,_,aym,_)  = ax1.axis()
+    ax1.plot([xmin,xmin],[aym,ymin],'--k')
+    ax1.plot([axm,xmin],[ymin,ymin],'--k')
+
+
     return xmin
     
