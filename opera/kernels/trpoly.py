@@ -1,6 +1,10 @@
 import numpy as np
 
 def trpoly(X1,X2,c=0,d=1):
+    """transformable polynomial kernel 
+        with K(x,x')_ij = k_polynomial(x(i),x'(j))
+    assumes dims(x) = dims(y)
+    """
     nrowX1 = X1.shape[0]
     nrowX2 = X2.shape[0]
     ncolX  = X1.shape[1]

@@ -2,6 +2,10 @@ import numpy as np
 
 
 def trgauss(X1,X2,gamma=1):
+    """transformable gaussian kernel 
+        with K(x,x')_ij = k_gauss(x(i),x'(j))
+    assumes dims(x) = dims(y)
+    """
     nrowX1 = np.size(X1[:,0])
     nrowX2 = np.size(X2[:,0])
     ncolX  = np.size(X1[0,:])

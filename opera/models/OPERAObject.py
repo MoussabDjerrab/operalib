@@ -52,6 +52,9 @@ class OPERAObject(object):
     
 
     def crossvalidationscore(self,X,y,B=5) : 
+        """Method to give a cross-validation score of a model
+        B is the number of bloc we have when we split the data
+        """
         blocs = np.array(split_data(X, y, 1, B-1))
         score = []
         obj = self.copy()
@@ -74,15 +77,16 @@ class OPERAObject(object):
         return np.array(score).mean()
     
     def copy(self):
+        """ copy a model, here it is nothing but it have to be define in each subclass"""
         return None
     
     def getparameter(self):
+        """ give the parameters of a model, here it is nothing but it have to be define in each subclass"""
         return[]
     @classmethod
     
     def learnC(self,K=K,Y=y,muH=1,muC=1,normC="L1"):
-        
-        
+        """ method to learn the C """
         Yvec = np.reshape(Y, (len(Y[0,:])*len(Y[:,0])))
         Cvec = proximal.proximalLinear(K, Yvec, mu=muH, muX=muC, norm=normC, n=Y.shape[0])
         C = np.reshape(Cvec,Y.T.shape).T

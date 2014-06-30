@@ -8,7 +8,11 @@ from .OPERAObject import OPERAObject
 import numpy as np
 import opera.kernels as kernels
 
-def grid_search(X,y,nbloc=5,parameters={}):
+def grid_search(X,y,nblocks=5,parameters={}):
+    """
+    Do a search of the best choices of parameter by minimizing the crossvalidation score with nblocks blocks
+    """
+    
     bestscore = float("inf")
     bestmodel = None
     gammas = [1]
@@ -50,16 +54,45 @@ def grid_search(X,y,nbloc=5,parameters={}):
                                 for muC in muCs : 
                                     for normC in normCs :
                                         obj = OVKR(ovkernel, kernel, c, d, gamma, B, muH, muC, normC)
-                                        score = obj.crossvalidationscore(X, y, nbloc)
+                                        score = obj.crossvalidationscore(X, y, nblocks)
                                         if( score < bestscore) :
                                             bestmodel = obj
                                             bestscore = score
     return bestmodel
 
 class OVKR(OPERAObject):
-    '''
-    classdocs
-    '''
+    """ 
+    Performs OVK regression over parameter ranges, cross-validation, etc.
+    
+    Parameters
+        ovkernel : 
+            dc : decomposable
+            tr : transformable
+        kernel: 
+            linear : linear kernel
+            gauss : gaussian kernel
+            polynomial : polynomial kernel
+        B:
+            id : [p,p] identity matrix
+            cov : [p,p] matrix, target 'covariance'
+        gamma:    gaussian kernel gamma
+        c :    polynomial kernel c
+        d :    polynomial kernel d
+        muH : regularizer for H
+        muC : regularizer for C
+        normC : norms for regularizers C
+            L1
+            mixed
+
+    Methods : 
+        fit : X,y -> fit a model
+        predict : X* -> y* the predicted classes
+        score : X,y -> score of the model with X and y
+        crossvalidation_score : X,y,B -> give a crossvalidation error of the model with B bloc
+        copy : self -> another model with the same parameters ans methods
+        setparameters : val_name,val -> assign val at val_name
+        getparameters : bool -> give the parameters, if bool it's true print them
+    """
     ovkernel = "dc"
     kernel = "gauss"
     c = 1
@@ -126,7 +159,7 @@ class OVKR(OPERAObject):
     
     def getparameter(self,show=True):
         if show :
-            print   "ovkernel  :\t %s\nkernel\t :\t %s\nc\t :\t %s\nd\t :\t %s\ngamma\t :\t %s\nB\t :\t %s\nmuH\t :\t %s\nmuC\t :\t %s\nnormC\t :\t %s\n"% (self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC)
+            print   "ovkernel :\t %s\nkernel\t :\t %s\nc\t :\t %s\nd\t :\t %s\ngamma\t :\t %s\nB\t :\t %s\nmuH\t :\t %s\nmuC\t :\t %s\nnormC\t :\t %s\n"% (self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC)
         return [self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC ]
 
     def setparam(self,name,val):

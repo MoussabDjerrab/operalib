@@ -4,8 +4,11 @@ from scipy.spatial.distance import pdist, cdist
 
 
 def gaussparam(X,midkval=0.5):
-    #  estimates the gamma-parameter for a gaussian kernel
-    # defaults to 0.5
+    """ Decomposable gaussian kernel 
+        B*k_gauss over the scalar gaussian
+        estimates the gamma-parameter for a gaussian kernel
+        defaults to 0.5
+    """
 
     # if too large, choose randomly 2000 points
     n = len(X)

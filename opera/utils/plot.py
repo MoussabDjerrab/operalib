@@ -2,8 +2,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_err(obj,var,ensvar,X,y,sparcity=False,xscale='log'):
+    """ 
+    Given a model, a parameter and a set of variation. 
+    This function is plotted and errors tests drive (and the sparcity of C) depending on the value of the given parameter
+    
+        obj : our model
+        var : our parameter
+        ensvar : set of variation
+        sparicty : boolean : do you want to plot the sparcity of C ?
+        xscale : scale of x
+    """
     ensvar.sort()
-    fig,ax1 = plt.subplots()
+    _,ax1 = plt.subplots()
     ax2 = ax1.twinx()
     ax1.set_xscale(xscale)
     ax2.set_xscale(xscale)

@@ -9,6 +9,14 @@ from trcust  import trcust
 import numpy as np
 
 def createB(y,B="identity"):
+    """ Choose our B
+    B is identity
+        out is the identity matrix with y size
+    B is covariance
+        out is the covariance matrix of y
+    B is a matrix
+        out is B
+    """
     if B == "identity" or B == None : 
         B = np.identity(len(y[0,:]))
     elif B == "cov" :

@@ -7,6 +7,9 @@ import numpy.linalg as LA
 AUXILIAR FUNCTION
 """
 def spectralradius(M):
+    """
+    Give the spectral radius of a matrix M. I.e the maximum of the eigenvalues of M
+    """
     l = LAs.eigsh(M, 1,maxiter=100, return_eigenvectors=False)[0]
     return l
 def normvector(x,norm="l1"):
@@ -19,20 +22,19 @@ def normvector(x,norm="l1"):
      
 
 def proximalLinear(K, y, init=None, mu=1, muX=1, norm='l1', maxiters=100, n=1, eps=1.e-3):
-    """ABSTRACT : Learning x with a norm constraint on the coefficients
+    """
+    ABSTRACT : Learning x with a norm constraint on the coefficients
     REFERENCE : Beck and Teboulle (2010) Gradient-based algorithms with applications to signal-recovery problems
     INPUTS :
-    K        : ([N*p,N*p]) Gram matrix
-    Yvec     : ([N*p,1]) output vector
-    niters    : number of iterations
-    C0       : ([N*p,1]) initial c-vector
-    muH  : (positive) hyperparameter for squared norm of h
-    muC  : (positive) hyperparameter for the L1-norm constraint
+        K    : ([N*p,N*p]) Gram matrix
+        y    : ([N*p,1]) output vector
+        init    : ([N*p,1]) initial c-vector, if it is None then (K+I)*init = y
+        mu  : (positive) hyperparameter for squared norm of h
+        muX  : (positive) hyperparameter for the norm constraint
+        norm : norm constraint
+        maxiters : number of iterations
     OUTPUTS : 
-    C  : ([N*p,1]) solution
-    AUTHORS  : Nehemy LIM, AROBAS group, IBISC, Universite d'Evry, France
-               Markus Heinonen 
-               Tristan TCHILINGUIRIAN 
+        X  : ([N*p,1]) solution
     """
     L = 2* spectralradius(np.dot(K,K))
     if init is None :
