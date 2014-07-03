@@ -32,7 +32,7 @@ def proximalGeneral(L,init=None,objective=None,print_objective=False,maxiters=10
         #    y(k+1) = xk + (tk-1/t(k+1))*(xk-x(k-1))
         
         xkOld = xk.copy() 
-        xk = proximal(yk,norm,mu1=mu1/L,mu2=1,partition,weight_partition)
+        xk = proximal(yk,norm,mu1=mu1/L,mu2=1,partition=partition,weight_partition=weight_partition)
         
         tkOld = tk
         tk = 0.5*(1 + np.sqrt(1 + 4*tkOld**2))

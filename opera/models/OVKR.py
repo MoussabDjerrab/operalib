@@ -107,7 +107,7 @@ class OVKR(OPERAObject):
     partitionC_weight=None
     normC = "L1"
 
-    def __init__(self, ovkernel="dc",kernel="gauss",c=1,d=1,gamma=1,B="identity",normC="L1",muH=1,muC_1=1,muC_2=1,partitionC=None,partitionC_weight=None):
+    def __init__(self, ovkernel="dc",kernel="gauss",c=1,d=1,gamma=1,B="identity",muH=1,normC="L1",muC_1=1,muC_2=1,partitionC=None,partitionC_weight=None):
         '''
         Constructor
         '''
@@ -118,17 +118,17 @@ class OVKR(OPERAObject):
         self.gamma = gamma
         self.B = B
         self.muH = muH
+        self.normC = normC
         self.muC_1 = muC_1
         self.muC_2 = muC_2
         self.partitionC_weight=partitionC_weight
         self.partitionC=partitionC
-        self.normC = normC
         self.kernel_function = kernels.chooseFunctionKernel(ovkernel, kernel, c, d, gamma, B)
 
     def learnC(self,Y):
         (N,_) = Y.shape
         Yvec = np.reshape(Y, (len(Y[0,:])*len(Y[:,0])))
-        if (self.norm.lower=='mixed' or self.norm.lower() == 'grouplasso'or self.norm.lower() == 'group lasso' or self.norm.lower() == 'sparsemixed' or self.norm.lower() == 'sparsegrouplasso'or self.norm.lower() == 'sparse group lasso' or self.norm.lower() == 'sparse mixed') and self.partitionC is None :
+        if (self.normC.lower() =='mixed' or self.normC.lower() == 'grouplasso'or self.normC.lower() == 'group lasso' or self.normC.lower() == 'sparsemixed' or self.normC.lower() == 'sparsegrouplasso'or self.normC.lower() == 'sparse group lasso' or self.normC.lower() == 'sparse mixed') and self.partitionC is None :
             partition = []
             for i in range(len(Y)/N) : 
                 partition.append(np.array(range(N))+i*N)
@@ -136,7 +136,7 @@ class OVKR(OPERAObject):
             if self.partitionC_weight is None :
                 self.partitionC_weight=np.ones(len(partition))
                
-        Cvec = proximal.proximalLinear(self.K, Yvec, mu=self.muH, norm=self.norm, muX_1=self.muC_1, muX_2=self.muC_2 , partitionX = self.partitionC , partitionX_weight=self.partitionC_weight, eps=1.e-3)
+        Cvec = proximal.proximalLinear(self.K, Yvec, mu=self.muH, norm=self.normC, muX_1=self.muC_1, muX_2=self.muC_2 , partitionX = self.partitionC , partitionX_weight=self.partitionC_weight, eps=1.e-3)
         C = np.reshape(Cvec,Y.T.shape).T
         self.C = C
         return C
@@ -178,12 +178,12 @@ class OVKR(OPERAObject):
         return np.mean((ypred - y)**2)
     
     def copy(self):
-        return OVKR(ovkernel=self.ovkernel,kernel=self.kernel,c=self.c,d=self.d,gamma=self.gamma,B=self.B,muH=self.muH,muC=self.muC,normC=self.normC)
+        return OVKR(ovkernel=self.ovkernel,kernel=self.kernel,c=self.c,d=self.d,gamma=self.gamma,B=self.B,muH=self.muH,muC_1=self.muC_1,muC_2=self.muC_2,partitionC=self.partitionC,normC=self.normC,partitionC_weight=self.partitionC_weight)
     
     def getparameter(self,show=True):
         if show :
-            print   "ovkernel :\t %s\nkernel\t :\t %s\nc\t :\t %s\nd\t :\t %s\ngamma\t :\t %s\nB\t :\t %s\nmuH\t :\t %s\nmuC\t :\t %s\nnormC\t :\t %s\n"% (self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC)
-        return [self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.muC,self.normC ]
+            print   "ovkernel :\t %s\nkernel\t :\t %s\nc\t :\t %s\nd\t :\t %s\ngamma\t :\t %s\nB\t :\t %s\nmuH\t :\t %s\nnormC\t :\t %s\nmuC_1\t :\t %s\nmuC_2\t :\t %s\npartitionC\t :\t %s\nweigths group in partition\t :\t %s\n"% (self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.normC,self.muC_1,self.muC_2,self.partitionC,self.partitionC_weight)
+        return [self.ovkernel,self.kernel,self.c,self.d,self.gamma,self.B,self.muH,self.normC,self.muC_1,self.muC_2,self.partitionC,self.partitionC_weight ]
 
     def setparam(self,name,val):
         if   name == "ovkernel" : self.ovkernel = val
@@ -193,7 +193,10 @@ class OVKR(OPERAObject):
         elif name == "gamma" :self.gamma = val
         elif name == "B" : self.B = val
         elif name == "muH" : self.muH = val
-        elif name == "muC" : self.muC = val
+        elif name == "muC1" : self.muC_1 = val
+        elif name == "muC2" : self.muC_2 = val
+        elif name == "partitionC" : self.partitionC = val
+        elif name == "partitionCweights" : self.partitionC_weight = val
         elif name == "normC" : self.normC = val
         elif name == "kernel_function" : self.kernel_function = val
         return 

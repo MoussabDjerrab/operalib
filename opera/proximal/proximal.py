@@ -32,7 +32,7 @@ def proximal(gradient,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None
 
 def prox_lasso(grad,mu):
     ''' l1-norm regularization
-    [ Prox_[μ||.||_1](u) ]j = (1-mu/|uj|) uj = sgn(uj)(|uj| − μ)_+
+    [Prox_[mu||.||_1] (u) ]j = (1-mu/|uj|) uj = sgn(uj)(|uj|-mu)_+
     '''
     tmp2 = np.abs(grad)-mu
     # test = (tmp2>=0) but it is not working, i don't know why
@@ -44,19 +44,19 @@ def prox_lasso(grad,mu):
 
 def prox_l2(grad,mu):
     '''
-    Prox_[μ/2||.||_2^2](u) = u /(1+μ) 
+    Prox_[mu/2||.||_2^2](u) = u /(1+mu) 
     '''
     return (1/(1+2*mu))*grad
 
 def prox_electicnet(grad,mu1,mu2):
     ''' l1+l2^2-regularization
-    Prox_μ(||.||_1+γ/2||.||_2^2) = Prox_[γμ/2||.||_2^2] o Prox_[μ||.||_1] = 1/(1+μγ) Prox_[μ||.||_1]
+    Prox_mu(||.||_1+gamma/2||.||_2^2) = Prox_[gammamu/2||.||_2^2] o Prox_[mu||.||_1] = 1/(1+mugamma) Prox_[mu||.||_1]
     '''
     return prox_l2( prox_lasso(grad,mu1) , mu2)
 
 def prox_grouplasso(grad,partition,weights):
     ''' l1/l2-norm regularization
-    [Prox_μΩ(u)]_g = ( 1 − λ/||u_g||2)_+ * u_g u g where g in partition
+    [Prox_mu(u)]_g = ( 1 - mu / ||u_g||_2 )_+ * u_g where g in partition
     '''
     if partition is None : 
         return prox_lasso(grad,1)

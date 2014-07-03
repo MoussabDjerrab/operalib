@@ -29,5 +29,5 @@ def proximalLinear(K, y, init=None, mu=1, norm='l1', muX_1=1, muX_2=1, partition
     def objective(x):
         LA.norm(np.dot(K,x)-y,2)**2 + mu/L*LA.norm(x,1)
         
-    return proximalGeneral(L,init=X,objective,False,maxiters,norm,muX_1,muX_2,partitionX,partitionX_weight,eps)
+    return proximalGeneral(L,X,objective,False,maxiters,norm,muX_1,muX_2,partitionX,partitionX_weight,eps)
     
