@@ -7,6 +7,7 @@ Created on Jun 18, 2014
 from .OPERAObject import OPERAObject
 import numpy as np
 import opera.kernels as kernels
+from opera import proximal
 
 def grid_search(X,y,nblocks=5,parameters={}):
     """
@@ -124,6 +125,22 @@ class OVKR(OPERAObject):
         self.normC = normC
         self.kernel_function = kernels.chooseFunctionKernel(ovkernel, kernel, c, d, gamma, B)
 
+    def learnC(self,Y):
+        (N,_) = Y.shape
+        Yvec = np.reshape(Y, (len(Y[0,:])*len(Y[:,0])))
+        if (self.norm.lower=='mixed' or self.norm.lower() == 'grouplasso'or self.norm.lower() == 'group lasso' or self.norm.lower() == 'sparsemixed' or self.norm.lower() == 'sparsegrouplasso'or self.norm.lower() == 'sparse group lasso' or self.norm.lower() == 'sparse mixed') and self.partitionC is None :
+            partition = []
+            for i in range(len(Y)/N) : 
+                partition.append(np.array(range(N))+i*N)
+            self.partitionC = np.array(partition)
+            if self.partitionC_weight is None :
+                self.partitionC_weight=np.ones(len(partition))
+               
+        Cvec = proximal.proximalLinear(self.K, Yvec, mu=self.muH, norm=self.norm, muX_1=self.muC_1, muX_2=self.muC_2 , partitionX = self.partitionC , partitionX_weight=self.partitionC_weight, eps=1.e-3)
+        C = np.reshape(Cvec,Y.T.shape).T
+        self.C = C
+        return C
+
     
     def fit(self, X, y, kwargs=None):
         """Method to fit a model
@@ -135,7 +152,7 @@ class OVKR(OPERAObject):
         """
         OPERAObject.fit(self, X, y, kwargs)
         self.K = self.kernel_function(X,X,y)
-        self.learnC(K=self.K,Y=self.y,muH=self.muH,muC=self.muC,normC=self.normC)
+        self.learnC(y)
         return
     
     def predict(self,X):

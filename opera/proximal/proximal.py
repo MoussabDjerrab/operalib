@@ -3,7 +3,7 @@ import numpy.linalg as LA
 
 def proximal(gradient,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None):
     """
-    
+    use proximal methode on a gradient
     norm : 
         L1 or lasso : mu1 ||C||_1
         L2 : mu2 ||C||_2
@@ -31,6 +31,9 @@ def proximal(gradient,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None
 
 
 def prox_lasso(grad,mu):
+    ''' l1-norm regularization
+    [ Prox_[μ||.||_1](u) ]j = (1-mu/|uj|) uj = sgn(uj)(|uj| − μ)_+
+    '''
     tmp2 = np.abs(grad)-mu
     # test = (tmp2>=0) but it is not working, i don't know why
     test = tmp2.copy()
@@ -38,12 +41,21 @@ def prox_lasso(grad,mu):
     test[tmp2<0] = 0
     Sol = test*tmp2*np.sign(grad)
     return Sol
+
 def prox_l2(grad,mu):
-    return (1/(1+2*mu))*grad
-def prox_electicnet(grad,mu1,mu2):
-    return prox_l2( prox_lasso(grad,mu1) , mu2)
-def prox_grouplasso(grad,partition,weights):
     '''
+    Prox_[μ/2||.||_2^2](u) = u /(1+μ) 
+    '''
+    return (1/(1+2*mu))*grad
+
+def prox_electicnet(grad,mu1,mu2):
+    ''' l1+l2^2-regularization
+    Prox_μ(||.||_1+γ/2||.||_2^2) = Prox_[γμ/2||.||_2^2] o Prox_[μ||.||_1] = 1/(1+μγ) Prox_[μ||.||_1]
+    '''
+    return prox_l2( prox_lasso(grad,mu1) , mu2)
+
+def prox_grouplasso(grad,partition,weights):
+    ''' l1/l2-norm regularization
     [Prox_μΩ(u)]_g = ( 1 − λ/||u_g||2)_+ * u_g u g where g in partition
     '''
     if partition is None : 
@@ -71,4 +83,6 @@ def prox_grouplasso(grad,partition,weights):
     return sol
 
 def prox_sparsegroupelasso(grad,mu,partition,weights):
+    '''Combined l1+l1/l2-norm l1+l2^2-regularization
+    '''
     return prox_grouplasso( prox_lasso(grad,mu) ,partition,weights)

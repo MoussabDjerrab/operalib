@@ -1,5 +1,4 @@
 import abc
-from opera import proximal
 from opera.models.split_data import __init__ as split_data
 import numpy as np
 
@@ -83,13 +82,6 @@ class OPERAObject(object):
     def getparameter(self):
         """ give the parameters of a model, here it is nothing but it have to be define in each subclass"""
         return[]
-    @classmethod
-    
-    def learnC(self,K=K,Y=y,muH=1,muC=1,normC="L1"):
-        """ method to learn the C """
-        Yvec = np.reshape(Y, (len(Y[0,:])*len(Y[:,0])))
-        Cvec = proximal.proximalLinear(K, Yvec, mu=muH, muX=muC, norm=normC, n=Y.shape[0])
-        C = np.reshape(Cvec,Y.T.shape).T
-        self.C = C
-        return C
+
+
     
