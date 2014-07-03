@@ -100,10 +100,13 @@ class OVKR(OPERAObject):
     gamma = 1
     B = "identity"
     muH = 1
-    muC = 1
+    muC_1 = 1
+    muC_2 = 1
+    partitionC = None
+    partitionC_weight=None
     normC = "L1"
 
-    def __init__(self, ovkernel="dc",kernel="gauss",c=1,d=1,gamma=1,B="identity",muH=1,muC=1,normC="L1"):
+    def __init__(self, ovkernel="dc",kernel="gauss",c=1,d=1,gamma=1,B="identity",normC="L1",muH=1,muC_1=1,muC_2=1,partitionC=None,partitionC_weight=None):
         '''
         Constructor
         '''
@@ -114,7 +117,10 @@ class OVKR(OPERAObject):
         self.gamma = gamma
         self.B = B
         self.muH = muH
-        self.muC = muC
+        self.muC_1 = muC_1
+        self.muC_2 = muC_2
+        self.partitionC_weight=partitionC_weight
+        self.partitionC=partitionC
         self.normC = normC
         self.kernel_function = kernels.chooseFunctionKernel(ovkernel, kernel, c, d, gamma, B)
 

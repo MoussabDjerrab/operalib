@@ -2,7 +2,17 @@ import numpy as np
 from proximal import proximal
 import numpy.linalg as LA
 
-def proximalGeneral(L,init=None,objective=None,maxiters=100,norm='L1',mu=1,n=1,eps=1.e-3):
+def proximalGeneral(L,init=None,objective=None,print_objective=False,maxiters=100,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None,eps=1.e-3):
+    """
+    init : initial vector (must be given)
+    L : Lispsitch coefficient
+    objective : our function score
+    maxiters : number of iteration of our algorithm
+    norm : regularization norm
+    mu1, mu2, partition, partition_weight : regularization parameters, see proximal for more informations
+    eps : stop criterian
+    """
+    
     if init is None : 
         print "FISTA algorithm need an initial vector"
         return None
@@ -22,7 +32,7 @@ def proximalGeneral(L,init=None,objective=None,maxiters=100,norm='L1',mu=1,n=1,e
         #    y(k+1) = xk + (tk-1/t(k+1))*(xk-x(k-1))
         
         xkOld = xk.copy() 
-        xk = proximal(yk,norm,mu,L,n)
+        xk = proximal(yk,norm,mu1=mu1/L,mu2=1,partition,weight_partition)
         
         tkOld = tk
         tk = 0.5*(1 + np.sqrt(1 + 4*tkOld**2))
