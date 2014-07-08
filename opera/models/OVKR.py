@@ -23,8 +23,11 @@ def grid_search(X,y,nblocks=5,parameters={}):
     kernels = ["gauss"]
     Bs = ["identity"]
     muHs = [1]
-    muCs = [1]
+    muC1s = [1]
+    muC2s = [1]
     normCs = ["L1"]
+    partitions = [None]
+    weights = [None]
 
     if parameters.has_key('gamma') : 
         gammas = parameters['gamma'] 
@@ -38,12 +41,18 @@ def grid_search(X,y,nblocks=5,parameters={}):
         kernels = parameters['kernel']
     if parameters.has_key('muH') :
         muHs = parameters['muH']
-    if parameters.has_key('muC') :
-        muCs = parameters['muC']
+    if parameters.has_key('muC1') :
+        muC1s = parameters['muC1']
+    if parameters.has_key('muC2') :
+        muC2s = parameters['muC2']
     if parameters.has_key('normC') :
         normCs = parameters['normC']
     if parameters.has_key('B') :
         Bs = parameters['B']
+    if parameters.has_key('partition') :
+        partitions = parameters['partition']
+    if parameters.has_key('partition_weight') :
+        weights = parameters['partition_weight']
         
     for ovkernel in ovkernels : 
         for kernel in kernels : 
@@ -52,9 +61,12 @@ def grid_search(X,y,nblocks=5,parameters={}):
                     for gamma in gammas : 
                         for B in Bs : 
                             for muH in muHs : 
-                                for muC in muCs : 
+                                for muC1 in muC1s : 
                                     for normC in normCs :
-                                        obj = OVKR(ovkernel, kernel, c, d, gamma, B, muH, muC, normC)
+                                        for muC2 in muC2s : 
+                                            for partition in partitions : 
+                                                for weight in weights : 
+                                                    obj = OVKR(ovkernel,kernel,c,d,gamma,B,muH,normC,muC1,muC2,partition,weight)
                                         score = obj.crossvalidationscore(X, y, nblocks)
                                         if( score < bestscore) :
                                             bestmodel = obj
@@ -152,7 +164,7 @@ class OVKR(OPERAObject):
         """
         OPERAObject.fit(self, X, y, kwargs)
         self.K = self.kernel_function(X,X,y)
-        self.learnC(y)
+        self.C = self.learnC(y)
         return
     
     def predict(self,X):
