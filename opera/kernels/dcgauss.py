@@ -32,6 +32,7 @@ def dcgauss(X1,X2,gamma,B):
     nrowX1 = np.size(X1[:,0])
     nrowX2 = np.size(X2[:,0])
     nrowB  = np.size(B[:,0])
+    #TODO s = gaussparam(X1+X2)
     s1 = np.sqrt(gaussparam(X1))
     s2 = np.sqrt(gaussparam(X2))
     s = s1*s2
