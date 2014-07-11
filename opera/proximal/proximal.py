@@ -18,7 +18,7 @@ def proximal(gradient,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None
         return prox_l2(gradient,mu2)
     
     elif norm.lower() == 'elasticnet'or norm.lower() == 'elastic net' : 
-        return prox_electicnet(gradient,mu1,mu2)
+        return prox_elasticnet(gradient,mu1,mu2)
     
     elif norm.lower() == 'mixed' or norm.lower() == 'grouplasso'or norm.lower() == 'group lasso' : 
         return prox_grouplasso(gradient,partition,weight_partition)
@@ -48,7 +48,7 @@ def prox_l2(grad,mu):
     '''
     return (1/(1+2*mu))*grad
 
-def prox_electicnet(grad,mu1,mu2):
+def prox_elasticnet(grad,mu1,mu2):
     ''' l1+l2^2-regularization
     Prox_mu(||.||_1+gamma/2||.||_2^2) = Prox_[gammamu/2||.||_2^2] o Prox_[mu||.||_1] = 1/(1+mugamma) Prox_[mu||.||_1]
     '''
@@ -59,7 +59,7 @@ def prox_grouplasso(grad,partition,weights):
     [Prox_mu(u)]_g = ( 1 - mu / ||u_g||_2 )_+ * u_g where g in partition
     '''
     if partition is None : 
-        return prox_lasso(grad,1)
+        return prox_l2(grad,1)
     elif weights is None :
         weights = np.ones(len(partition))
     
