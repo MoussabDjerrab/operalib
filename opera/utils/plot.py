@@ -12,6 +12,7 @@ def plot_err(obj,var,ensvar,X,y,sparcity=False,xscale='log'):
         sparicty : boolean : do you want to plot the sparcity of C ?
         xscale : scale of x
     """
+    # TODO : sparcity of group if partition not None
     ensvar.sort()
     _,ax1 = plt.subplots()
     ax2 = ax1.twinx()
