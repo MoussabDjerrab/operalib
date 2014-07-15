@@ -27,7 +27,7 @@ def proximalLinear(K, y, init=None, mu=1, norm='l1', muX_1=1, muX_2=1, partition
     def gradient(x) : 
         return np.dot(K,np.dot(K+mu*np.identity(K.shape[0]),x)-y)       
     def objective(x):
-        LA.norm(np.dot(K,x)-y,2)**2 + mu/L*LA.norm(x,1)
+        return LA.norm(np.dot(K,x)-y,2)**2 + mu/L*LA.norm(x,1)
         
-    return proximalGeneral(L,X,gradient,objective,False,maxiters,norm,muX_1,muX_2,partitionX,partitionX_weight,eps)
+    return proximalGeneral(L,X,gradient,objective,False,maxiters,norm,muX_1,muX_2,partitionX,partitionX_weight,eps,debug=False)
     

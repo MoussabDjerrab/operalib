@@ -8,5 +8,5 @@ def gaussianKernel(X,Y,gamma):
 
 def gramMatrix(X1,X2,B,gammadc,gammatr):
     #TODO 
-    K = dcgauss(X1,X2,B,gammadc) * trgauss(X1,X2,gammatr)
+    K = dcgauss(X1,X2,gammadc,B) * trgauss(X1,X2,gammatr)
     return K

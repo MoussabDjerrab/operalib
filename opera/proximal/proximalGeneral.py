@@ -2,7 +2,7 @@ import numpy as np
 from proximal import proximal
 import numpy.linalg as LA
 
-def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=False,maxiters=100,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None,eps=1.e-3,backtrack=False):
+def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=False,maxiters=100,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None,eps=1.e-3,backtrack=False,debug=False):
     """
     init : initial vector (must be given)
     L : Lispsitch coefficient
@@ -39,6 +39,9 @@ def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=Fal
         
         
         xkOld = xk.copy() 
+        if debug : 
+            print("step_"+str(k)+"\n\t step : "+str(mu1/L)+"\n\t norm of Yk : "+str(LA.norm(yk))+"\n\t grad of Yk : "+str(LA.norm(gradient(yk)))+"\n\t objective : "+str(objective(yk)))
+            
         xk = proximal(yk-mu1/L*gradient(yk),  norm,mu1=mu1/L,mu2=1,partition=partition,weight_partition=weight_partition)
         
         tkOld = tk

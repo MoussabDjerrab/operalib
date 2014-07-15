@@ -10,6 +10,7 @@ import opera.kernels as kernels
 from opera import proximal
 import numpy.linalg as LA
 from opera.utils.conditionalIndependence import conditionalIndependence
+from opera.utils.normalize import normalize
 
 class OKVARboost(OPERAObject):
     """ 
@@ -47,6 +48,11 @@ class OKVARboost(OPERAObject):
     eps = 1e-4
     max_iter = 100
     flagRes = 1
+    Ws = None
+    C = None
+    rhos = None
+    subsets = None
+    hs = None
 
     def __init__(self,gammadc=1e-4,gammatr=1,muH=0.001,muC=1,randFrac=1,alpha=0.05,n_edge_pick=0,eps=1e-4,flagRes=1,max_iter=100):
         '''
@@ -60,11 +66,12 @@ class OKVARboost(OPERAObject):
         self.randFrac = randFrac
         self.alpha = alpha
         self.n_edge_pick = n_edge_pick
-        self.eps = self.eps
-        self.flagRes = self.flagRes
+        self.eps = eps
+        self.flagRes = flagRes
+        self.max_iter = max_iter 
 
 
-    def fit(self, X, y, kwargs=None):
+    def fit(self, X,y=None, kwargs=None):
         """Method to fit a model
         
         Parameters      
@@ -72,7 +79,11 @@ class OKVARboost(OPERAObject):
             y        array, with shape = [N,p], where N is the number of samples.
             kwargs    optional data-dependent parameters.
         """
-        OPERAObject.fit(self, X, y, kwargs)
+        if y is None : 
+            y=X[1:,:]
+
+        OPERAObject.fit(self, X,y, kwargs)
+        
         
         (N,p) = y.shape
         # M is the number of boosting iterations
@@ -88,7 +99,7 @@ class OKVARboost(OPERAObject):
         #hs is a list of h : base models learned from each subset
         hs = np.array([None] * M)
         #H_m is a matrix : estimated boosting model, initialize by the average of gene expressions (data are centered)
-        H_m = np.tile(y.mean,(N,1))
+        H_m = np.tile(y.mean(),y.shape)
         
         #Mean Squared Errors
         mse = np.zeros((M,p))
@@ -110,6 +121,8 @@ class OKVARboost(OPERAObject):
         stop = M #stopping iteration
         
         for m in range(M) : 
+            #regularazion of h_m
+            print("LOOP "+str(m))
             #Matrice of residuals
             U_m = y-H_m
             #if the residual for gene i is too low then remove it
@@ -118,11 +131,12 @@ class OKVARboost(OPERAObject):
                 for j in range(nGenes) : 
                     if LA.norm(U_m[:,genes[j]])**2 < self.eps : 
                         genesOut.append(j)
-            genes[genesOut] = -1
-            genes = genes[genes>=0]
+                genes[genesOut] = -1
+                genes = genes[genes>=0]
             #
             if genes.size<=0 :  
                 stop = m-1
+                print ('Stop at iteration_' + str(stop+1) + ': No more significant residuals')
                 break
             #
             ##Interaction matrix learning 
@@ -144,10 +158,11 @@ class OKVARboost(OPERAObject):
                             nTry = nTry+1
                         else : 
                             W_m=np.zeros((p,p)) # TODO  : outside the loop ?
-                            W_m[idx_rand_m,idx_rand_m] = W_m_sub 
+                            W_m[idx_rand_m] = W_m_sub 
             # if no significant edge was found after 'tot' trials
             if terminate : 
                 stop = m-1
+                print ('Stop at iteration_' + str(stop+1) + ': Could not find significant edges')
                 break
             #
             # number of remaining genes
@@ -155,21 +170,25 @@ class OKVARboost(OPERAObject):
             #
             ## Gram Matrix computation
             # Laplacian
-            L = np.diag(np.sum(W_m_sub)) - W_m_sub
+            L = np.diag(np.sum(W_m_sub,axis=0)) - W_m_sub
             B_m = np.exp(betaParam * L)
             #Gram Matrix
-            K_m = kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammadc,self.gammatr)
+            K_m = (kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammadc,self.gammatr))
+            
+            
             #
             ## Coefficient Cs learning
-            Z = K_m + self.muH*np.eye(K_m.shape)
+            Z = K_m + self.muH*np.eye(K_m.shape[0])
             if LA.det(Z) == 0 : 
                 stop = m-1
+                print ('Stop at iteration_' + str(stop+1) + ': Matrix K_m+lambda*Id is singular')
                 break
             else : 
                 yNew = np.reshape(U_m[:,idx_rand_m].T,(K_m.shape[0],1))
                 C_m_k = proximal.proximalLinear(K=K_m, y=yNew, mu=self.muH, norm='l1', muX_1=self.muC)
                 if (C_m_k == 0).all() : 
                     stop = m-1
+                    print ('Stop at iteration_' + str(stop+1) + ': All regression coefficients are zero')
                     break
             #
             h_m_k = np.reshape(np.dot(K_m,C_m_k),(nFrac,N)).T
@@ -189,7 +208,9 @@ class OKVARboost(OPERAObject):
             ## Line search
             rhos[m] = np.trace(np.dot(h_m.T,U_m))*LA.norm(h_m,'fro')**2 #rho(m) = \arg\min_\rho ||D_m - \rho * h_m||_2^2;
             ##Update the boosting model
-            H_m = H_m + np.dot(rhos[m],h_m)
+            H_m = H_m + rhos[m]*h_m
+            print("K_m : \n\t loop  "+str(m)+"\n\t min   "+str(K_m.min())+"\n\t max   "+str(K_m.max())+"\n\t mean  "+str(K_m.mean())+"\n|C_m|inf "+str(LA.norm(C_m_k,float("inf")))+"\n|H_m|inf "+str(LA.norm(H_m,float("inf"))))
+
             ## Compute the Mean Squared Errors
             mse[m,:] = (1/N)*((y-H_m)**2).sum();
             #
@@ -200,5 +221,11 @@ class OKVARboost(OPERAObject):
             mse = mse[:stop,:]
             subsets = subsets[:stop]
             hs = hs[:stop]
+            
+        self.Ws = Ws
+        self.C = C
+        self.rhos = rhos
+        self.subsets = subsets
+        self.hs = hs
 
-        return(Ws,C,rhos,hs,H_m)
+        return

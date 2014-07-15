@@ -6,6 +6,7 @@ from trgauss import trgauss
 from trpoly  import trpoly
 from trlin   import trlin
 from trcust  import trcust
+from gramMatrix import gramMatrix
 import numpy as np
 
 def createB(y,B="identity"):
