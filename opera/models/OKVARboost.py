@@ -8,6 +8,7 @@ from .OPERAObject import OPERAObject
 import numpy as np
 import opera.kernels as kernels
 from opera import proximal
+import scipy.linalg as sLA
 import numpy.linalg as LA
 from opera.utils.conditionalIndependence import conditionalIndependence
 from opera.utils.normalize import normalize
@@ -53,6 +54,7 @@ class OKVARboost(OPERAObject):
     rhos = None
     subsets = None
     hs = None
+    Js = None
 
     def __init__(self,gammadc=1e-4,gammatr=1,muH=0.001,muC=1,randFrac=1,alpha=0.05,n_edge_pick=0,eps=1e-4,flagRes=1,max_iter=100):
         '''
@@ -122,7 +124,6 @@ class OKVARboost(OPERAObject):
         
         for m in range(M) : 
             #regularazion of h_m
-            print("LOOP "+str(m))
             #Matrice of residuals
             U_m = y-H_m
             #if the residual for gene i is too low then remove it
@@ -158,7 +159,7 @@ class OKVARboost(OPERAObject):
                             nTry = nTry+1
                         else : 
                             W_m=np.zeros((p,p)) # TODO  : outside the loop ?
-                            W_m[idx_rand_m] = W_m_sub 
+                            W_m[np.ix_(idx_rand_m,idx_rand_m)] = W_m_sub 
             # if no significant edge was found after 'tot' trials
             if terminate : 
                 stop = m-1
@@ -209,7 +210,7 @@ class OKVARboost(OPERAObject):
             rhos[m] = np.trace(np.dot(h_m.T,U_m))*LA.norm(h_m,'fro')**2 #rho(m) = \arg\min_\rho ||D_m - \rho * h_m||_2^2;
             ##Update the boosting model
             H_m = H_m + rhos[m]*h_m
-            print("K_m : \n\t loop  "+str(m)+"\n\t min   "+str(K_m.min())+"\n\t max   "+str(K_m.max())+"\n\t mean  "+str(K_m.mean())+"\n|C_m|inf "+str(LA.norm(C_m_k,float("inf")))+"\n|H_m|inf "+str(LA.norm(H_m,float("inf"))))
+            #print("K_m : \n\t loop  "+str(m)+"\n\t min   "+str(K_m.min())+"\n\t max   "+str(K_m.max())+"\n\t mean  "+str(K_m.mean())+"\n|C_m|inf "+str(LA.norm(C_m_k,float("inf")))+"\n|H_m|inf "+str(LA.norm(H_m,float("inf"))))
 
             ## Compute the Mean Squared Errors
             mse[m,:] = (1/N)*((y-H_m)**2).sum();
@@ -227,5 +228,46 @@ class OKVARboost(OPERAObject):
         self.rhos = rhos
         self.subsets = subsets
         self.hs = hs
-
+        self.nb_iter = stop
         return
+    
+    def predict(self,data):
+        nFrac = self.subsets[0].size
+        (N,p) = data.shape
+        tf = N - 1 #number of time points when predictions are made 
+        mStop = self.max_iter
+        self.Js = np.array([None] * mStop)
+        J = np.zeros((p,p))
+        data = data[0:tf,:]
+        #TODO : outside this parameter
+        betaParam = .2; # diffusion parameter for the Laplacian
+    
+        for m in range(mStop) :
+            W_m = self.Ws[m]
+            C_m = self.C[m] #; np.reshape(self.C[m],(p,tf))# just to make sure it is correct size
+            #
+            W_m_sub = W_m[np.ix_(self.subsets[m],self.subsets[m])]
+            C_m_sub = C_m[self.subsets[m],:]
+            #
+            deg_W = np.diag(np.sum(W_m_sub,0))
+            L_m_sub = deg_W - W_m_sub #standard Laplacian
+            #
+            B_m_sub = sLA.expm(betaParam*L_m_sub);
+            #
+            tmpJ_sub = np.zeros((nFrac,nFrac))
+            tmpJ = np.zeros((p,p))
+            # iterate over time points 1:tf
+            for t in range(tf):
+                for l in range(tf) :
+                    K_lt = (kernels.trgauss(data[l,self.subsets[m]].T,data[t,self.subsets[m]].T,self.gammatr))
+                    tmpJ1 = np.tile(data[l,self.subsets[m]],(nFrac,1))-np.tile(data[t,self.subsets[m]],(nFrac,1))
+                    tmpJ2 = np.tile(C_m_sub[:,l],(nFrac,1))
+                    tmpJ_sub = tmpJ_sub + tmpJ1*K_lt*tmpJ2
+    
+            tmpJ[np.ix_(self.subsets[m],self.subsets[m])] = tmpJ_sub
+            B_m = np.zeros((p,p));
+            B_m[np.ix_(self.subsets[m],self.subsets[m])] = B_m_sub;
+            #
+            J = J + (2./tf)*self.gammatr*self.rhos[m]*B_m*tmpJ
+            self.Js[m] = J 
+        return J
