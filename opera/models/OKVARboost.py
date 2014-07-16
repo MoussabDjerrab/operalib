@@ -174,13 +174,9 @@ class OKVARboost(OPERAObject):
             # Laplacian
             L = np.diag(np.sum(W_m_sub,axis=0)) - W_m_sub
             B_m = sLA.expm(betaParam * L)
-            if m == 0 :
-                print L
-                print B_m.mean()
             #Gram Matrix
             K_m = (kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammadc,self.gammatr))
-            
-            
+            #
             #
             ## Coefficient Cs learning
             Z = K_m + self.muH*np.eye(K_m.shape[0])
@@ -211,11 +207,11 @@ class OKVARboost(OPERAObject):
             subsets[m] = idx_rand_m
             #
             ## Line search
-            rhos[m] = np.trace(np.dot(h_m.T,U_m))*LA.norm(h_m,'fro')**2 #rho(m) = \arg\min_\rho ||D_m - \rho * h_m||_2^2;
+            rhos[m] = np.trace(np.dot(h_m.T,U_m))/LA.norm(h_m,'fro')**2 #rho(m) = \arg\min_\rho ||D_m - \rho * h_m||_2^2;
             ##Update the boosting model
             H_m = H_m + rhos[m]*h_m
             #print("K_m : \n\t loop  "+str(m)+"\n\t min   "+str(K_m.min())+"\n\t max   "+str(K_m.max())+"\n\t mean  "+str(K_m.mean())+"\n|C_m|inf "+str(LA.norm(C_m_k,float("inf")))+"\n|H_m|inf "+str(LA.norm(H_m,float("inf"))))
-
+            #
             ## Compute the Mean Squared Errors
             mse[m,:] = (1/N)*((y-H_m)**2).sum();
             #

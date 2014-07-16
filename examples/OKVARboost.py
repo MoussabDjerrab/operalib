@@ -16,6 +16,6 @@ data = mat.get('data')[0]
 
 mat = scipy.io.loadmat('samples.mat')
 
-mdl = OKVARboost(muH=100,gammadc=0,max_iter=50,gammatr=1)
+mdl = OKVARboost(muH=0.1,gammadc=0,max_iter=50,gammatr=1)
 mdl.fit(data[0])
 J = mdl.predict(data[0][1:])
