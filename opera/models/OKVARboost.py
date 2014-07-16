@@ -150,6 +150,7 @@ class OKVARboost(OPERAObject):
                         idx_rand_m = genes.copy() # indices of genes selected at random
                         np.random.shuffle(idx_rand_m)
                         idx_rand_m = idx_rand_m[:nFrac]
+                        #idx_rand_m.sort()
                         #
                         #partial correlation test
                         (W_m_sub,terminate) = conditionalIndependence(U_m[:,idx_rand_m], self.alpha, self.n_edge_pick)
@@ -172,7 +173,10 @@ class OKVARboost(OPERAObject):
             ## Gram Matrix computation
             # Laplacian
             L = np.diag(np.sum(W_m_sub,axis=0)) - W_m_sub
-            B_m = np.exp(betaParam * L)
+            B_m = sLA.expm(betaParam * L)
+            if m == 0 :
+                print L
+                print B_m.mean()
             #Gram Matrix
             K_m = (kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammadc,self.gammatr))
             
