@@ -11,7 +11,9 @@ from opera import proximal
 import scipy.linalg as sLA
 import numpy.linalg as LA
 from opera.utils.conditionalIndependence import conditionalIndependence
-from opera.utils.normalize import normalize
+from opera.utils import AUC
+from scipy.stats.mstats import mquantiles as quantile
+from opera.utils import vec
 
 class OKVARboost(OPERAObject):
     """ 
@@ -49,14 +51,9 @@ class OKVARboost(OPERAObject):
     eps = 1e-4
     max_iter = 100
     flagRes = 1
-    Ws = None
-    C = None
-    rhos = None
-    subsets = None
-    hs = None
-    Js = None
 
-    def __init__(self,gammadc=1e-4,gammatr=1,muH=0.001,muC=1,randFrac=1,alpha=0.05,n_edge_pick=0,eps=1e-4,flagRes=1,max_iter=100):
+
+    def __init__(self,gammadc=1e-4,gammatr=1,muH=0.001,muC=1,randFrac=1,alpha=0.05,n_edge_pick=0,eps=1e-4,flagRes=True,max_iter=100):
         '''
         Constructor
         '''
@@ -70,43 +67,99 @@ class OKVARboost(OPERAObject):
         self.n_edge_pick = n_edge_pick
         self.eps = eps
         self.flagRes = flagRes
-        self.max_iter = max_iter 
+        self.max_iter = max_iter
+        self.boosting_param = None
+        self.adj_matrix = None
 
-
-    def fit(self, X,y=None, kwargs=None):
+    def fit(self,data):
         """Method to fit a model
+        Parameter
+            data : cell of N [array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
+        """
+        N = data.size
+        params = np.array([None]*N)
+        for i in range(N) : 
+            params[i] = self.boosting(data[i])
+        self.boosting_param = params
+
+    def predict(self,data,jacobian_threshold=1,adj_matrix_threshold=0.50):
+        """Method to predict a model
+        Parameter
+            data : cell of N [array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
+            jacobian_threshold : quantile level of the Jacobian values used to get the adjacency matrix
+            adj_matrix_threshold : M = sum{for each cell i}(Mi). our final matrix keeps the pourcentage of our adj_matrix_threshold ceil
+        """
+        (_,p) = data[0].shape
+        M = np.zeros((p,p))
+        params = self.boosting_param
+        for i in range(data.size) :
+            Ji = self.jacobian(data[i], params[i])
+            delta = quantile(vec(np.abs(np.tanh(Ji))),jacobian_threshold)
+            M = M+(Ji>=delta)
+            
+        #on conserve les adj_matrix_threshold meilleurs elements non nuls
+        A = (M.reshape(M.size)).copy()
+        A.sort()
+        n_keep = ((A>0).sum()*adj_matrix_threshold)
+        if n_keep<=0 : 
+            M = (M>0)
+        else :
+            M = (M>=A[A.size-n_keep])
+        #M = (M>=(adj_matrix_threshold*M.sum()))
+        self.adj_matrix=M*1
+
+    def score(self, data, M, jacobian_threshold=1,adj_matrix_threshold=0.50):
+        self.predict(data, jacobian_threshold, adj_matrix_threshold)
+        M_vec = np.reshape(self.adj_matrix,self.adj_matrix.size)
+        Mvec = np.reshape(M,M.size)
+        return AUC(Mvec,M_vec)
+
+    def boosting(self, X,y=None):
+        """Method to do a boosting on a model
         
         Parameters      
             X        array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
             y        array, with shape = [N,p], where N is the number of samples.
             kwargs    optional data-dependent parameters.
+        Output (dictionnary) 
+            W
+            C
+            rho
+            subset
+            h
+            J
         """
+        output = {
+              "W"   : None ,
+              "C"   : None ,
+              "rho" : None , 
+              "subset" : None ,
+              "h"   : None , 
+              "J"   : None ,
+              "nb_iter" : None
+              }
         if y is None : 
             y=X[1:,:]
-
-        OPERAObject.fit(self, X,y, kwargs)
-        
-        
         (N,p) = y.shape
         # M is the number of boosting iterations
         M = self.max_iter 
         # Ws is a list of W : [p,p] interaction matrices W_m
         #      W_m[i,j] = 1 -> genes i and j interact
         #      W_m[i,j] = 0 -> gene i and j do not interact
-        Ws = np.array([None] * M)
+        W = np.array([None] * M)
         # Cs is a list of C : Cm parameters
         C = np.array([None] * M)
         #rhos is the coeficient of the "line search" along the steepest-descent"
-        rhos = np.zeros((M,1))
+        rho = np.zeros((M,1))
         #hs is a list of h : base models learned from each subset
-        hs = np.array([None] * M)
+        h = np.array([None] * M)
         #H_m is a matrix : estimated boosting model, initialize by the average of gene expressions (data are centered)
         H_m = np.tile(y.mean(),y.shape)
         
         #Mean Squared Errors
         mse = np.zeros((M,p))
         #our subsets : a list of subset
-        subsets = np.array([None] * M)
+        subset = np.array([None] * M)
         
         #size of random subsets
         nFrac = np.round(self.randFrac*p)
@@ -117,7 +170,7 @@ class OKVARboost(OPERAObject):
         
         #TODO : see if it has to be arguments
         #some other stuff
-        tot = 100 #maximum number of trials for the partial correlation test
+        tot = 1000 #maximum number of trials for the partial correlation test
         betaParam = 0.2 # diffusion parameter for the Laplacian
         
         stop = M #stopping iteration
@@ -150,7 +203,7 @@ class OKVARboost(OPERAObject):
                         idx_rand_m = genes.copy() # indices of genes selected at random
                         np.random.shuffle(idx_rand_m)
                         idx_rand_m = idx_rand_m[:nFrac]
-                        #idx_rand_m.sort()
+                        idx_rand_m.sort()
                         #
                         #partial correlation test
                         (W_m_sub,terminate) = conditionalIndependence(U_m[:,idx_rand_m], self.alpha, self.n_edge_pick)
@@ -186,7 +239,7 @@ class OKVARboost(OPERAObject):
                 break
             else : 
                 yNew = np.reshape(U_m[:,idx_rand_m].T,(K_m.shape[0],1))
-                C_m_k = proximal.proximalLinear(K=K_m, y=yNew, mu=self.muH, norm='l1', muX_1=self.muC)
+                C_m_k = proximal.proximalLinear(K=K_m, y=yNew, mu=self.muH, norm='l1', muX_1=self.muC,maxiters=10, eps=0)
                 if (C_m_k == 0).all() : 
                     stop = m-1
                     print ('Stop at iteration_' + str(stop+1) + ': All regression coefficients are zero')
@@ -195,59 +248,64 @@ class OKVARboost(OPERAObject):
             h_m_k = np.reshape(np.dot(K_m,C_m_k),(nFrac,N)).T
             h_m = np.zeros((N,p)) # genes that do not belong to the subset are assigned a 0 prediction
             h_m[:,idx_rand_m] = h_m_k
-            hs[m] = h_m
+            h[m] = h_m
             #
-            Ws[m] = W_m
+            W[m] = W_m
             #
             C_m_k = np.reshape(C_m_k,(nFrac,N))
             C_m = np.zeros((p,N)) # rows of C_m = 0 for genes that do not belong to the subset
             C_m[idx_rand_m,:] = C_m_k
             C[m] = C_m
             #
-            subsets[m] = idx_rand_m
+            subset[m] = idx_rand_m
             #
             ## Line search
-            rhos[m] = np.trace(np.dot(h_m.T,U_m))/LA.norm(h_m,'fro')**2 #rho(m) = \arg\min_\rho ||D_m - \rho * h_m||_2^2;
+            rho[m] = np.trace(np.dot(h_m.T,U_m))/LA.norm(h_m,'fro')**2 #rho(m) = \arg\min_\rho ||D_m - \rho * h_m||_2^2;
             ##Update the boosting model
-            H_m = H_m + rhos[m]*h_m
+            H_m = H_m + rho[m]*h_m
             #print("K_m : \n\t loop  "+str(m)+"\n\t min   "+str(K_m.min())+"\n\t max   "+str(K_m.max())+"\n\t mean  "+str(K_m.mean())+"\n|C_m|inf "+str(LA.norm(C_m_k,float("inf")))+"\n|H_m|inf "+str(LA.norm(H_m,float("inf"))))
             #
             ## Compute the Mean Squared Errors
             mse[m,:] = (1/N)*((y-H_m)**2).sum();
-            #
-            ##Resize the outputs
-            Ws = Ws[:stop]
-            C = C[:stop]
-            rhos = rhos[:stop]
-            mse = mse[:stop,:]
-            subsets = subsets[:stop]
-            hs = hs[:stop]
             
-        self.Ws = Ws
-        self.C = C
-        self.rhos = rhos
-        self.subsets = subsets
-        self.hs = hs
-        self.nb_iter = stop
-        return
+        ##Resize the outputs   
+        output["W"] = W[:stop]
+        output["C"] = C[:stop]
+        output["rho"] = rho[:stop]
+        output["subset"] = subset[:stop]
+        output["h"] = h[:stop]
+        output["nb_iter"] = stop
+        return output
     
-    def predict(self,data):
-        nFrac = self.subsets[0].size
+    def jacobian(self,data,param):
+        """Method to compute a jacobian on a model after a boosting
+        
+        Parameters      
+            data        array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
+            param    the output of a boosting
+        """
+        W = param["W"] 
+        C = param["C"] 
+        subset = param["subset"] 
+        nb_iter = param["nb_iter"]
+        rho = param["rho"]
+        
+        nFrac = subset[0].size
         (N,p) = data.shape
         tf = N - 1 #number of time points when predictions are made 
-        mStop = self.max_iter
-        self.Js = np.array([None] * mStop)
+        mStop = nb_iter
+        Js = np.array([None] * mStop)
         J = np.zeros((p,p))
         data = data[0:tf,:]
         #TODO : outside this parameter
         betaParam = .2; # diffusion parameter for the Laplacian
     
         for m in range(mStop) :
-            W_m = self.Ws[m]
-            C_m = self.C[m] #; np.reshape(self.C[m],(p,tf))# just to make sure it is correct size
+            W_m = W[m]
+            C_m = C[m] #; np.reshape(self.C[m],(p,tf))# just to make sure it is correct size
             #
-            W_m_sub = W_m[np.ix_(self.subsets[m],self.subsets[m])]
-            C_m_sub = C_m[self.subsets[m],:]
+            W_m_sub = W_m[np.ix_(subset[m],subset[m])]
+            C_m_sub = C_m[subset[m],:]
             #
             deg_W = np.diag(np.sum(W_m_sub,0))
             L_m_sub = deg_W - W_m_sub #standard Laplacian
@@ -259,15 +317,15 @@ class OKVARboost(OPERAObject):
             # iterate over time points 1:tf
             for t in range(tf):
                 for l in range(tf) :
-                    K_lt = (kernels.trgauss(data[l,self.subsets[m]].T,data[t,self.subsets[m]].T,self.gammatr))
-                    tmpJ1 = np.tile(data[l,self.subsets[m]],(nFrac,1))-np.tile(data[t,self.subsets[m]],(nFrac,1))
+                    K_lt = (kernels.trgauss(data[l,subset[m]].T,data[t,subset[m]].T,self.gammatr))
+                    tmpJ1 = np.tile(data[l,subset[m]],(nFrac,1))-np.tile(data[t,subset[m]],(nFrac,1))
                     tmpJ2 = np.tile(C_m_sub[:,l],(nFrac,1))
                     tmpJ_sub = tmpJ_sub + tmpJ1*K_lt*tmpJ2
     
-            tmpJ[np.ix_(self.subsets[m],self.subsets[m])] = tmpJ_sub
+            tmpJ[np.ix_(subset[m],subset[m])] = tmpJ_sub
             B_m = np.zeros((p,p));
-            B_m[np.ix_(self.subsets[m],self.subsets[m])] = B_m_sub;
+            B_m[np.ix_(subset[m],subset[m])] = B_m_sub;
             #
-            J = J + (2./tf)*self.gammatr*self.rhos[m]*B_m*tmpJ
-            self.Js[m] = J 
+            J = J + (2./tf)*self.gammatr*rho[m]*B_m*tmpJ
+            Js[m] = J 
         return J
