@@ -28,7 +28,7 @@ def calc_auc_pr(pred,labels) :
     labelsf = labels[idx]
     
     tp = np.cumsum(labelsf)*1.# true positive
-    fp = (range(nb_tot) - tp)# false positive
+    fp = (range(nb_tot) - tp)+1.# false positive
     flags = (np.diff(predf) != False) #identical thresholds are removed
     tpr = tp[flags] / nb_pos
     fpr = fp[flags] / nb_neg
@@ -36,16 +36,16 @@ def calc_auc_pr(pred,labels) :
     tpr = np.concatenate(([0],tpr,[1]))
     fpr = np.concatenate(([0],fpr,[1]))
     
-    auc_roc = sum((fpr[1:]-fpr[:fpr.size-1])*(tpr[1:]-fpr[0:tpr.size-1]))/2.;
+    auc_roc = sum((fpr[1:]-fpr[:fpr.size-1])*(tpr[1:]+tpr[:tpr.size-1]))/2.;
 
     #Transform ROC curve points into PR space
     recall = tp / nb_pos
     precision = tp / (tp + fp)
     
     if (sum(np.diff(tp)>1) > 0) : 
-        recall_fin = np.zeros((1,nb_pos))
-        precision_fin = np.zeros((1,nb_pos))
-        index = 1;
+        recall_fin = np.zeros(nb_pos)
+        precision_fin = np.zeros(nb_pos)
+        index = 0;
         #
         #Add in-between PR points
         #
@@ -61,7 +61,7 @@ def calc_auc_pr(pred,labels) :
                 x = 1
                 while (x < (TPB - TPA)) : 
                     recall_fin[index] = (TPA + x) / nb_pos
-                    precision_fin[index] = (TPA + x) / (TPA + x + FPA + (FPB - FPA)/(TPB - TPA) * x) 
+                    precision_fin[index] = (TPA + x) / (1.*TPA + x + FPA + (FPB - FPA)/(TPB - TPA) * x) 
                     x = x + 1
                     index = index + 1
         #

@@ -93,11 +93,12 @@ class OKVARboost(OPERAObject):
         M = np.zeros((p,p))
         params = self.boosting_param
         for i in range(data.size) :
-            Ji = self.jacobian(data[i], params[i])
-            delta = quantile(vec(np.abs(np.tanh(Ji))),jacobian_threshold)
+            Ji = np.abs(np.tanh(self.jacobian(data[i], params[i])))
+            delta = quantile(vec(Ji),jacobian_threshold)
             M = M+(Ji>=delta)
             
         #on conserve les adj_matrix_threshold meilleurs elements non nuls
+        """
         A = (M.reshape(M.size)).copy()
         A.sort()
         n_keep = ((A>0).sum()*adj_matrix_threshold)
@@ -106,13 +107,16 @@ class OKVARboost(OPERAObject):
         else :
             M = (M>=A[A.size-n_keep])
         #M = (M>=(adj_matrix_threshold*M.sum()))
+        """
+        delta = quantile(vec(M),adj_matrix_threshold)
+        M = (M>=delta)
         self.adj_matrix=M*1
 
     def score(self, data, M, jacobian_threshold=1,adj_matrix_threshold=0.50):
         self.predict(data, jacobian_threshold, adj_matrix_threshold)
         M_vec = np.reshape(self.adj_matrix,self.adj_matrix.size)
         Mvec = np.reshape(M,M.size)
-        return AUC(Mvec,M_vec)
+        return AUC(M_vec,Mvec)
 
     def boosting(self, X,y=None):
         """Method to do a boosting on a model

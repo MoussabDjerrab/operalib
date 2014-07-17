@@ -9,7 +9,9 @@ from opera.utils import spectralradius
 from opera.utils.AUC import AUC,calc_auc_pr
 from opera.utils import vec
 
-
+x = np.ones(10)
+x[0]=0
+(pred,labels)=(x,x)
 
 #os.chdir("/home/lyx/")
 
@@ -18,20 +20,19 @@ data = mat.get('data')[0]
 M_ref = np.abs(mat["Ref"])
 
 
-mdl = OKVARboost(muH=0.1,gammadc=0,max_iter=100,gammatr=0.2)
+mdl = OKVARboost(muH=10,muC=1,gammadc=0,max_iter=100,gammatr=0.2)
 #p = mdl.boosting(data[0])
 #J = mdl.jacobian(data[0],p)
 
 mdl.fit(data)
 
-mdl.score(data,M_ref,0.5,0.5)
+mdl.score(data,M_ref,0.95,0.5)
 
 
-mdl.predict(data,1,0.5)
+mdl.predict(data,0.95,0.5)
 M = mdl.adj_matrix
-mdl.score(data,M_ref)
+#mdl.score(data,M_ref)
 
-mdl.predict(data, 1,0.5)
 M_vec = vec(mdl.adj_matrix)
 Mvec = vec(M_ref)
 
