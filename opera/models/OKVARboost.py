@@ -71,15 +71,17 @@ class OKVARboost(OPERAObject):
         self.boosting_param = None
         self.adj_matrix = None
 
-    def fit(self,data):
+    def fit(self,data,print_step=False):
         """Method to fit a model
         Parameter
             data : cell of N [array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
         """
         N = data.size
         params = np.array([None]*N)
-        for i in range(N) : 
-            params[i] = self.boosting(data[i])
+        for i in range(N) :
+            if print_step : 
+                print "data no "+str(i) 
+            params[i] = self.boosting(data[i],print_step=print_step)
         self.boosting_param = params
 
     def predict(self,data,jacobian_threshold=1,adj_matrix_threshold=0.50):
@@ -118,7 +120,7 @@ class OKVARboost(OPERAObject):
         Mvec = np.reshape(M,M.size)
         return AUC(M_vec,Mvec)
 
-    def boosting(self, X,y=None):
+    def boosting(self, X,y=None,print_step=False):
         """Method to do a boosting on a model
         
         Parameters      
@@ -158,7 +160,7 @@ class OKVARboost(OPERAObject):
         #hs is a list of h : base models learned from each subset
         h = np.array([None] * M)
         #H_m is a matrix : estimated boosting model, initialize by the average of gene expressions (data are centered)
-        H_m = np.tile(y.mean(),y.shape)
+        H_m = np.tile(X.mean(),y.shape)
         
         #Mean Squared Errors
         mse = np.zeros((M,p))
@@ -180,6 +182,8 @@ class OKVARboost(OPERAObject):
         stop = M #stopping iteration
         
         for m in range(M) : 
+            if print_step and (m/10)*10==m : 
+                print "\t boosting step no "+str(m) 
             #regularazion of h_m
             #Matrice of residuals
             U_m = y-H_m
@@ -232,8 +236,8 @@ class OKVARboost(OPERAObject):
             L = np.diag(np.sum(W_m_sub,axis=0)) - W_m_sub
             B_m = sLA.expm(betaParam * L)
             #Gram Matrix
-            K_m = (kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammadc,self.gammatr))
-            #
+            #K_m = (kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammadc,self.gammatr))
+            K_m = kernels.gramMatrix_(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,self.gammatr)
             #
             ## Coefficient Cs learning
             Z = K_m + self.muH*np.eye(K_m.shape[0])
@@ -243,7 +247,8 @@ class OKVARboost(OPERAObject):
                 break
             else : 
                 yNew = np.reshape(U_m[:,idx_rand_m].T,(K_m.shape[0],1))
-                C_m_k = proximal.proximalLinear(K=K_m, y=yNew, mu=self.muH, norm='l1', muX_1=self.muC,maxiters=10, eps=0)
+                (C_m_k,_,_) = proximal.elastic_shooting(K_m,yNew,self.muH,self.muC,init=np.linalg.solve(Z, yNew))
+                #C_m_k = proximal.proximalLinear(K=K_m, y=yNew, mu=self.muH, norm='l1', muX_1=self.muC,maxiters=1000, eps=1e-6)
                 if (C_m_k == 0).all() : 
                     stop = m-1
                     print ('Stop at iteration_' + str(stop+1) + ': All regression coefficients are zero')

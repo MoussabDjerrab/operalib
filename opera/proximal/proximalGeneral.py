@@ -35,24 +35,23 @@ def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=Fal
         if backtrack :
             #TODO 
             L=L
-        
-        
-        
+        #
+        #
         xkOld = xk.copy() 
         if debug : 
             print("step_"+str(k)+"\n\t step : "+str(mu1/L)+"\n\t norm of Yk : "+str(LA.norm(yk))+"\n\t grad of Yk : "+str(LA.norm(gradient(yk)))+"\n\t objective : "+str(objective(yk)))
-            
+        #   
         xk = proximal(yk-mu1/L*gradient(yk),  norm,mu1=mu1/L,mu2=1,partition=partition,weight_partition=weight_partition)
-        
+        #
         tkOld = tk
         tk = 0.5*(1 + np.sqrt(1 + 4*tkOld**2))
-        
+        #
         ykOld = yk.copy()
         yk = xk + ((tkOld-1)/tk)*(xk - xkOld)
-        
+        #
         if objective is not None : 
             loss[k] = objective(xk)
-            
+        #   
         if LA.norm(xk-xkOld) < eps and LA.norm(yk-ykOld) < eps:
             return xk
     

@@ -29,8 +29,8 @@ def gaussparam(X,midkval=0.5):
 
 def dcgauss(X1,X2,gamma,B):
     """ decomposable gaussian kernel B*k_gauss over the scalar gaussian """
-    nrowX1 = np.size(X1[:,0])
-    nrowX2 = np.size(X2[:,0])
+    nrowX1 = X1.shape[0]
+    nrowX2 = X2.shape[0]
     nrowB  = np.size(B[:,0])
     #TODO s = gaussparam(X1+X2)
     s1 = np.sqrt(gaussparam(X1))
