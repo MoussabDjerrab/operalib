@@ -2,7 +2,7 @@ import numpy as np
 from proximal import proximal
 import numpy.linalg as LA
 
-def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=False,maxiters=100,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None,eps=1.e-3,backtrack=False,debug=False):
+def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=False,maxiters=100,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None,eps=None,backtrack=False,debug=False):
     """
     init : initial vector (must be given)
     L : Lispsitch coefficient
@@ -19,6 +19,8 @@ def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=Fal
     if gradient is None : 
         print "FISTA algorithm need a gradient function"
         return None
+    if eps is None : 
+        eps = LA.norm(init)*1e-5
     # step0 : y1=x0, t1=1
     tk = 1
     yk = init.copy()
@@ -39,7 +41,7 @@ def proximalGeneral(L,init=None,gradient=None,objective=None,print_objective=Fal
         #
         xkOld = xk.copy() 
         if debug : 
-            print("step_"+str(k)+"\n\t step : "+str(mu1/L)+"\n\t norm of Yk : "+str(LA.norm(yk))+"\n\t grad of Yk : "+str(LA.norm(gradient(yk)))+"\n\t objective : "+str(objective(yk)))
+            print("step_"+str(k)+"\n\t step : "+str(mu1/L)+"\n\t norm of Yk : "+str(LA.norm(yk))+"\n\t grad of Yk : "+str(LA.norm(gradient(yk))))
         #   
         xk = proximal(yk-mu1/L*gradient(yk),  norm,mu1=mu1/L,mu2=1,partition=partition,weight_partition=weight_partition)
         #
