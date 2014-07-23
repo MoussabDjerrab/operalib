@@ -1,6 +1,6 @@
 import scipy.io
 import time
-from opera.models.OKVARboost import OKVARboost
+from opera.models import OKVARboost
 from opera.utils.conditionalIndependence import conditionalIndependence
 from matplotlib import pyplot as plt
 import numpy as np
@@ -23,19 +23,28 @@ data = mat.get('data')[0]
 M_ref = np.abs(mat["Ref"])
 
 #mdl = OKVARboost(muH = 0.001,muC = 1,gammadc=0,max_iter=100,gammatr=0.2)
-mdl = OKVARboost(muH=100,muC=0.1,gammadc=0,max_iter=10,gammatr=1,eps=0)
+mdl = OKVARboost(muH=1,muC=1,gammadc=0,max_iter=4,gammatr=0.2,eps=1e-2)
+print mdl
 #p = mdl.boosting(data[0])
 #J = mdl.jacobian(data[0],p)
-
-#A = mdl.boosting(data[0])
-
 mdl.fit(data,print_step=True)
+#A = mdl.boosting(data[0])
+params = {'gammatr' : [0,1,10] , 
+          'gammadc' : [0,1,10] ,
+          'muH' : [0.1,0,1,10] ,
+          'muC' : [0.1,0,1,10] , 
+          'jacobian_threshold' : [0.6] ,
+          'adj_matrix_threshold': [0.7] , 
+          'max_iter' : [4]
+          }
 
-mdl.score(data,M_ref,0.95,0.5)
+#mdl = grid_search(data, M_ref, parameters = params)
 
 
-mdl.predict(data,0.95,0.5)
+
+mdl.predict(data,0.1,0.5)
 M = mdl.adj_matrix
+mdl.score(data, M_ref,0.1,0.5)
 #mdl.score(data,M_ref)
 
 M_vec = vec(mdl.adj_matrix)

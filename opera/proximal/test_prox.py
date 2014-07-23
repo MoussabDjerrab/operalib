@@ -16,7 +16,7 @@ muH = 1
 muX = 1
 K = trgauss(X,X,1)
 A = K.copy()
-norm = "L1"
+norm = "elasticnet"
 
 L = 2* spectralradius(np.dot(K.T,K))
 x0 =  np.linalg.solve(K + muH*np.identity(K.shape[0]), y)
@@ -34,6 +34,7 @@ def g(x):
 
 
 x_pyprox = forward_backward(f, g, x0, L, maxiter=100, method='fista')
-LA.norm(x_pyprox)
+#LA.norm(x_pyprox)
 x_opera = proximalGeneral(L,x0,g,maxiters=100,norm=norm,mu1=muX)
-LA.norm(x_opera)
+#LA.norm(x_opera)
+(x_pyprox==x_opera).all()

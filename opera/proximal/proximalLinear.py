@@ -4,7 +4,7 @@ from opera.utils import spectralradius
 import numpy.linalg as LA
 
 
-def proximalLinear(K, y, init=None, mu=1, norm='l1', muX_1=1, muX_2=1, partitionX=None, partitionX_weight=None, maxiters=100, eps=1.e-3):
+def proximalLinear(K, y, init=None, mu=1, norm='l1', muX_1=1, muX_2=1, partitionX=None, partitionX_weight=None, maxiters=100, eps=None):
     """
     ABSTRACT : Learning x with a norm constraint on the coefficients
     REFERENCE : Beck and Teboulle (2010) Gradient-based algorithms with applications to signal-recovery problems

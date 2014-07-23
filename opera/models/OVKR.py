@@ -137,6 +137,45 @@ class OVKR(OPERAObject):
         self.partitionC=partitionC
         self.kernel_function = kernels.chooseFunctionKernel(ovkernel, kernel, c, d, gamma, B)
 
+    def __repr__(self):
+        if self.K is None : fitted = "no "
+        else : fitted = "yes"
+        return "OVKR model : < fitted:"+fitted+" >"
+    def __str__(self):
+        out = "OVKR model : \n\t Hyperparameters :\n"
+        #parameters print
+        def item(s,r):
+            return "\t\t"+s+str(r)+"\n"
+        out+=item("ridge penalty parameter : muH=",self.muH)
+        out+=item("l1 penalty parameter : muC1=",self.muC1)
+        out+=item("l2 penalty parameter : muC2=",self.muC2)
+        if self.partitionC is not None : out+=item("partition of C : ",self.partitionC)
+        if self.ovkernel == "tr" : ovkernel = "transformable"
+        elif self.ovkernel == "dc" : ovkernel = "decomposable"
+        else : ovkernel = str(self.ovkernel)
+        if self.kernel == "linear" : kernel = "linear"
+        elif self.kernel == "gauss" : kernel = "gaussian"
+        elif self.kernel == "polynomial" : kernel = "polynomial"
+        else : kernel = str(self.kernel)
+        out+="The matrix_valued kernel is a "+ovkernel+kernel+" one"
+        if self.B=="id" : out+="The matrix B is the [p,p] identity matrix"
+        elif self.B=="cov" : out+="The matrix B is the [p,p] matrix, target covariance"
+        elif self.B__class__==''.__class__ : out+="the matrix B is : "+self.B
+        else : out+="The matrix B is already computed"
+        out+=item("Parameter of gaussian matrix-valued kernel : gamma=",self.gamma)
+        out+=item("Parameters of polynomial matrix-valued kernel : c="+str(self.c)+" d="+str(self.d),"")
+        
+
+        if self.n_edge_pick > 0 : item("Number of edges to pick in each random subset : n_edge_pick=",self.n_edge_pick)
+        else :  item("Number of edges to pick in each random subset : n_edge_pick=","all the significant edges")
+        if self.flagRes : f = "yes"
+        else : f = "no"
+        item("Variables whose residuals are too low are removed at each iteration : flagRes=",f)
+        #fit print
+        if self.K is None : out+="the model is not fitted yet"
+        else : out+="the model is fitted"
+        return out
+
     def learnC(self,Y):
         (N,_) = Y.shape
         Yvec = np.reshape(Y, (len(Y[0,:])*len(Y[:,0])))

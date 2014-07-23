@@ -13,19 +13,15 @@ def proximal(gradient,norm='L1',mu1=1,mu2=1,partition=None,weight_partition=None
     """
     if norm.upper() == 'L1' or norm.lower() == 'lasso' : 
         return prox_lasso(gradient,mu1)
-    
-    elif norm.upper == 'L2' : 
+    elif norm.upper() == 'L2' : 
         return prox_l2(gradient,mu2)
-    
     elif norm.lower() == 'elasticnet'or norm.lower() == 'elastic net' : 
         return prox_elasticnet(gradient,mu1,mu2)
-    
     elif norm.lower() == 'mixed' or norm.lower() == 'grouplasso'or norm.lower() == 'group lasso' : 
         return prox_grouplasso(gradient,partition,weight_partition)
-    
     elif norm.lower() == 'sparsemixed' or norm.lower() == 'sparsegrouplasso'or norm.lower() == 'sparse group lasso' or norm.lower() == 'sparse mixed' :
         return prox_sparsegroupelasso(gradient,mu1,partition,weight_partition)
-  
+    print("Error in proximal : norm "+norm+" unknow")
     return
 
 

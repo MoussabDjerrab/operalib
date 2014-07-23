@@ -21,7 +21,6 @@ def gaussparam(X,midkval=0.5):
                 newX[j][:] = X[i][:]
                 j=j+1
         X = newX
-
     D = pdist(X)
     D = D**2
     gamma = - np.log(midkval) / np.mean(D);
@@ -32,6 +31,8 @@ def dcgauss(X1,X2,gamma,B):
     nrowX1 = X1.shape[0]
     nrowX2 = X2.shape[0]
     nrowB  = np.size(B[:,0])
+    if X1.ndim<2 : X1 = np.array([X1]).T
+    if X2.ndim<2 : X2 = np.array([X2]).T
     #TODO s = gaussparam(X1+X2)
     s1 = np.sqrt(gaussparam(X1))
     s2 = np.sqrt(gaussparam(X2))
