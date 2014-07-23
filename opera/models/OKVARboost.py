@@ -91,45 +91,31 @@ def grid_search(data,M,score="AUPR",parameters={},print_step=False):
 
 class OKVARboost(OPERAObject):
     """
-    ******************************
-    Class for OKVARboost estimator
-    ******************************
+    .. class:: OKVARboost
     
     This implements OKVARboost fitting, prediction and score
 
 
-    Parameters
-    ##########
-    muH : float (default=0.001)
-        ridge penalty parameter (lambda2)
-    
-    muC : float (default=1.)
-        l1 penalty parameter (lambda1)
-    
-    gammadc : float (default=0.)
-        Parameter of decomposable gaussian matrix-valued kernel
-    
-    gammatr : float (default=1.)
-        Parameter of transformable gaussian matrix-valued kernel
-   
-    alpha : float (default=1.)
-        Level of the partial correlation test is set to a conservative
-    
-    eps : float (default=1.e-4)
-        Stopping criterion threshold for the norm of the residual vector
-    
-    max_iter : int (default=100)
-        Number of boosting iterations
-    
-    randFrac : float in [0,1] (default=1.)
-        Size of random subset as a percentage of the network size
-    
-    n_edge_pick : int (default=0)
-        Number of edges to pick in each random subset
-        if 0 then all the significant edges are picked
-    
-    flagRes : bool (default=True)
-        If it is True then variables whose residuals are too low are removed at each iteration
+    :param muH: ridge penalty parameter (lambda2)
+    :type muH: float , default=0.001
+    :param muC: l1 penalty parameter (lambda1)
+    :type muC: float , default=1.
+    :param gammadc: Parameter of decomposable gaussian matrix-valued kernel
+    :type gammadc: float , default=0.
+    :param gammatr: Parameter of transformable gaussian matrix-valued kernel
+    :type gammatr: float , default=1.
+    :param alpha: Level of the partial correlation test is set to a conservative
+    :type alpha: float , default=1.
+    :param eps: Stopping criterion threshold for the norm of the residual vector
+    :type eps: float , default=1.e-4
+    :param max_iter: Number of boosting iterations
+    :type max_iter: int , default=100
+    :param randFrac: Size of random subset as a percentage of the network size
+    :type randFrac: float in [0,1] , default=1.
+    :param n_edge_pick: Number of edges to pick in each random subset. If 0 then all the significant edges are picked
+    :type n_edge_pick: int , default=0
+    :param flagRes: If it is True then variables whose residuals are too low are removed at each iteration
+    :type flaRes: bool , default=True
     """
     gammadc = 1e-4
     gammatr = 1
@@ -145,17 +131,29 @@ class OKVARboost(OPERAObject):
 
     def __init__(self,gammadc=1e-4,gammatr=1,muH=0.001,muC=1,randFrac=1,alpha=0.05,n_edge_pick=0,eps=1e-4,flagRes=True,max_iter=100):
         self.gammadc = gammadc
+        """Parameter of decomposable gaussian matrix-valued kernel"""
         self.gammatr = gammatr
+        """Parameter of transformable gaussian matrix-valued kernel"""
         self.muH = muH
+        """ridge penalty parameter (lambda2)"""
         self.muC = muC
+        """l1 penalty parameter (lambda1)"""
         self.randFrac = randFrac
+        """Size of random subset as a percentage of the network size"""
         self.alpha = alpha
+        """Level of the partial correlation test is set to a conservative"""
         self.n_edge_pick = n_edge_pick
+        """ Number of edges to pick in each random subset. If 0 then all the significant edges are picked"""
         self.eps = eps
+        """Stopping criterion threshold for the norm of the residual vector"""
         self.flagRes = flagRes
+        """If it is True then variables whose residuals are too low are removed at each iteration"""
         self.max_iter = max_iter
+        """Number of boosting iterations"""
         self.boosting_param = None
+        """returns of fit , see :func:`boosting.boosting()`"""
         self.adj_matrix = None
+        """returns of predict"""
     def __repr__(self):
         if self.boosting_param is None : fitted = "no "
         else : fitted = "yes"
@@ -197,19 +195,12 @@ class OKVARboost(OPERAObject):
     def fit(self,data,print_step=False):
         """Method to fit a model
         
-        Parameters
-        ##########
-        data : ndarray [N,n,d]
-            cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
-        
-        print_step : bool (default=False)
-            If it is true then displayed to the user the current step on the standard output
-        
-        Attributes
-        ##########
-        boosting_param : ndarray of dictionnary
-            for each time serie it compute a dictionnary
-            see :func:'utils.boosting()' for more information about boosting_param
+        :param data: Cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
+        :type data: ndarray [N,n,d]
+        :param print_step: If it is true then displayed to the user the current step on the standard output
+        :type: bool , default=False
+
+        :returns:  boosting_param (ndarray of dictionnary) as an attribute. For each time serie it compute a dictionnary, see :func:`boosting.boosting` for more information about boosting_param
         """
         N = data.size
         params = np.array([None]*N)
@@ -222,16 +213,15 @@ class OKVARboost(OPERAObject):
     def predict(self,data,jacobian_threshold=0.50,adj_matrix_threshold=0.50):
         """Method to predict a model
         
-        Parameters
-        ##########
-        data : ndarray [N,n,d]
-            cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
-        
-        jacobian_threshold : float (default=0.5) 
-            quantile level of the Jacobian values used to get the adjacency matrix
-        
-        adj_matrix_threshold : float (default=0.5) 
-            quantile level of the adjacency matrix valued used to get the final adjacency matrix
+        :param data: Cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
+        :type data: ndarray [N,n,d]
+        :param jacobian_threshold: Quantile level of the Jacobian values used to get the adjacency matrix
+        :type jacobian_threshold: float , default=0.5
+        :param adj_matrix_threshold: Quantile level of the adjacency matrix valued used to get the final adjacency matrix
+        :type adj_matrix_threshold: float , default=0.5
+
+        :returns: Adjacency matrix of our datas
+        :rtype: nparray
         """
         #we save the threshold for the print
         self.jacobian_threshold=jacobian_threshold
@@ -249,6 +239,18 @@ class OKVARboost(OPERAObject):
         self.adj_matrix=M*1
 
     def score(self, data, M, jacobian_threshold=1,adj_matrix_threshold=0.50):
+        """Method to give the AUROC and AUPR score a model
+        
+        :param data: Cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
+        :type data: ndarray [N,n,d]
+        :param jacobian_threshold: Quantile level of the Jacobian values used to get the adjacency matrix
+        :type jacobian_threshold: float , default=0.5
+        :param adj_matrix_threshold: Quantile level of the adjacency matrix valued used to get the final adjacency matrix
+        :type adj_matrix_threshold: float , default=0.5
+
+        :returns: The AUROC and AUPR score of our model with M as true matrix
+        :rtype: (float,float)
+        """
         if self.adj_matrix is None : self.predict(data, jacobian_threshold, adj_matrix_threshold)
         M_vec = np.reshape(self.adj_matrix,self.adj_matrix.size)
         Mvec = np.reshape(M,M.size)

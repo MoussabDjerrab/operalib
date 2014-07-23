@@ -1,7 +1,45 @@
 '''
-Created on Jun 18, 2014
+.. module:: OVKR
+   :platform: Unix, Windows
+   :synopsis: module to performs an OVKR
 
-@author: Tristan Tchilinguirian
+.. moduleauthor:: Tristan Tchilinguirian <tristan.tchilinguirian@ensiie.fr>
+
+Let there be :math:`N`-sized dataset :math:`\\chi`. We wish to estimate a :math:`p`-dimensional target function
+
+.. math::
+    h(x) = \\sum_{i=1}^N K\\left(x,x_i\\right) \\mathbf{c}_i \\in \\mathbb{R}
+    
+which is in vector notation
+
+.. math::
+    h(x) = \\mathbf{K}_{x,\\chi}\\overrightarrow{\\mathbf{c}} \\text{ where } \\mathbf{K}_{x,\\chi}\in\\mathbb{R}^{p\\times Np}
+
+The full operator-valued kernel over the dataset :math:`\chi` is
+   
+    
+.. math::
+
+    \mathbf{K}_{\chi,\chi} = \\begin{pmatrix}
+                             K(x_1,x_1)&         & \\cdots    &         & K(x_1,x_N) \\\\  
+                                       & \\ddots &            &         &            \\\\
+                             \\vdots   &         & K(x_i,x_j) &         & \\vdots    \\\\ 
+                                       &         &            & \\ddots &            \\\\
+                             K(x_N,x_1)&         & \\cdots    &         & K(x_N,x_N)
+                            \\end{pmatrix}
+
+where each block consists of :math:`p` times :math:`p` kernel values, for instance over the "components" :math:`i,j`
+
+.. math::
+    K(x,z) = \\begin{pmatrix}k(x^1,z^1)& \\cdots & k(x^1,z^j) & \\cdots & k(x^1,z^p) \\\\ \\vdots  & \\ddots && \\ddots &  \\\\ k(x^i,z^1)& & k(x^i,z^j) & & k(x^i,z^p) \\\\ \\vdots & \\ddots & & \\ddots & \\\\ k(x^p,z^1)& \\cdots & k(x^p,z^j) & \\cdots & k(x^p,z^p) \\end{pmatrix}
+
+where :math:`p` is the number of targets. A common scalar kernel is the gaussian kernel
+
+.. math::
+    k(x,z) = \\exp\\left(-\\gamma ||x-z||^2\\right)
+
+The OVK kernel method extends trivially the kernel ridge regression and classification.
+
 '''
 
 from .OPERAObject import OPERAObject
@@ -77,38 +115,28 @@ class OVKR(OPERAObject):
     """ 
     Performs OVK regression over parameter ranges, cross-validation, etc.
     
-    Parameters
-        ovkernel : 
-            dc : decomposable
-            tr : transformable
-        kernel: 
-            linear : linear kernel
-            gauss : gaussian kernel
-            polynomial : polynomial kernel
-        B:
-            id : [p,p] identity matrix
-            cov : [p,p] matrix, target 'covariance'
-        gamma:    gaussian kernel gamma
-        c :    polynomial kernel c
-        d :    polynomial kernel d
-        muH : regularizer for H
-        muC : regularizer for C
-        normC : norms for regularizers C
-            L1
-            mixed
-
-    Methods : 
-        fit : X,y -> fit a model
-        predict : X* -> y* the predicted classes
-        score : X,y -> score of the model with X and y
-        crossvalidation_score : X,y,B -> give a crossvalidation error of the model with B bloc
-        copy : self -> another model with the same parameters ans methods
-        setparameters : val_name,val -> assign val at val_name
-        getparameters : bool -> give the parameters, if bool it's true print them
+    :param ovkernel: 
+    :type ovkernel: str, 'dc' or 'tr' 
+    :param kernel:  
+    :type kernel: str, 'linear' 'gauss' or 'polynomial' 
+    :param B: 
+    :type B: str - 'id' , 'cov' or nparray
+    :param gamma: gaussian kernel gamma  
+    :type gamma: float
+    :param c: polynomial kernel c
+    :type c: float
+    :param d: polynomial kernel d
+    :type d: float
+    :param muH: regularizer for H
+    :type muH: positif float
+    :param muC: regularizer for C
+    :type muC: positif float
+    :param normC: norms for regularizers C
+    :type normC: str, 'lasso' 'L2' 'elasticnet' 'grouplasso' 'sparsegrouplasso'
     """
     ovkernel = "dc"
     kernel = "gauss"
-    c = 1
+    c = 0
     d = 1
     gamma = 1
     B = "identity"
@@ -119,10 +147,7 @@ class OVKR(OPERAObject):
     partitionC_weight=None
     normC = "L1"
 
-    def __init__(self, ovkernel="dc",kernel="gauss",c=1,d=1,gamma=1,B="identity",muH=1,normC="L1",muC_1=1,muC_2=1,partitionC=None,partitionC_weight=None):
-        '''
-        Constructor
-        '''
+    def __init__(self, ovkernel="dc",kernel="gauss",c=0,d=1,gamma=1,B="identity",muH=1,normC="L1",muC_1=1,muC_2=1,partitionC=None,partitionC_weight=None):
         self.ovkernel = ovkernel
         self.kernel = kernel 
         self.c = c
@@ -193,15 +218,15 @@ class OVKR(OPERAObject):
         return C
 
     
-    def fit(self, X, y, kwargs=None):
+    def fit(self, X, y):
         """Method to fit a model
         
-        Parameters      
-            X        array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
-            y        array, with shape = [N,p], where N is the number of samples.
-            kwargs    optional data-dependent parameters.
+        :param: array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type: ndarray
+        :param: array, with shape = [N,p], where N is the number of samples.
+        :type: ndarray 
         """
-        OPERAObject.fit(self, X, y, kwargs)
+        OPERAObject.fit(self, X, y)
         self.K = self.kernel_function(X,X,y)
         self.C = self.learnC(y)
         return
@@ -209,10 +234,10 @@ class OVKR(OPERAObject):
     def predict(self,X):
         """Method to predict theclust of a data
         
-        Parameters      
-            X        array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
-        Output
-            y        array, with shape = [N,p], where N is the number of samples.
+        :param: array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type: ndarray
+        :returns: array, with shape = [N,p], where N is the number of samples.
+        :rtype: ndarray 
         """
         Ktest = self.kernel_function(X,self.X,self.y)
         Cvec = np.reshape(self.C.T, (len(self.C[:,0])*len(self.C[0,:])))
@@ -223,6 +248,13 @@ class OVKR(OPERAObject):
     def score(self,X,y):
         """Method to give a score of a model
         A model that can give a goodness of fit measure or a likelihood of unseen data, implements (higher is better):
+        
+        :param: array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type: ndarray
+        :param: array, with shape = [N,p], where N is the number of samples.
+        :type: ndarray 
+        :returns: The score of our model
+        :rtype: float
         """
         #compute the score
         ypred = self.predict(X)
