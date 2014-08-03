@@ -11,7 +11,7 @@ class OPERAObject(object):
     kernel_function = None
 
     @abc.abstractmethod
-    def fit(self, X, y, kwargs):
+    def fit(self, X, y, kwargs=None):
         """Method to fit a model
         
         Parameters      

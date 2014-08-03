@@ -21,20 +21,34 @@ import scipy.linalg as sLA
 mat = scipy.io.loadmat('DREAM3_size10Ecoli1.mat')
 data = mat.get('data')[0]
 M_ref = np.abs(mat["Ref"])
+l=[];
+for i in range(10) : l.append("G"+str(i+1));
+labels=np.array(l)
 
 #mdl = OKVARboost(muH = 0.001,muC = 1,gammadc=0,max_iter=100,gammatr=0.2)
-mdl = OKVARboost(muH=1,muC=1,gammadc=0,max_iter=4,gammatr=0.2,eps=1e-2)
+mdl = OKVARboost(muH=0.1,muC=1,gammadc=0,max_iter=4,gammatr=0.2,eps=1e-2)
 print mdl
 #p = mdl.boosting(data[0])
 #J = mdl.jacobian(data[0],p)
-mdl.fit(data,print_step=True)
+mdl.fit(data,print_step=False)
+
+nA = 20
+A = np.array(range(nA))*1./nA
+(m,tj,ta)=(0,0,0)
+for j in A :
+    for a in A :
+        (_,err) = mdl.score(data,M_ref,j,a)
+        if err>m :
+            (m,tj,ta)=(err,j,a)
+
+
 #A = mdl.boosting(data[0])
-params = {'gammatr' : [0,1,10] , 
+params = {'gammatr' : [0,1,10] ,
           'gammadc' : [0,1,10] ,
           'muH' : [0.1,0,1,10] ,
-          'muC' : [0.1,0,1,10] , 
+          'muC' : [0.1,0,1,10] ,
           'jacobian_threshold' : [0.6] ,
-          'adj_matrix_threshold': [0.7] , 
+          'adj_matrix_threshold': [0.7] ,
           'max_iter' : [4]
           }
 

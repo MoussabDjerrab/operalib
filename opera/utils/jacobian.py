@@ -49,6 +49,7 @@ def jacobian(obj,data,param):
         # iterate over time points 1:tf
         for t in range(tf):
             for l in range(tf) :
+				#TODO : K_lt when gammadc not null
                 K_lt = (kernels.trgauss(data[l,subset[m]].T,data[t,subset[m]].T,obj.gammatr))
                 tmpJ1 = np.tile(data[l,subset[m]],(nFrac,1))-np.tile(data[t,subset[m]],(nFrac,1))
                 tmpJ2 = np.tile(C_m_sub[:,l],(nFrac,1))

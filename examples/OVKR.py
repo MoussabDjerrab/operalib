@@ -52,7 +52,7 @@ print "Grid tests were performed with this parameters : \n\t%s" % params
 
 print "grid search's computation time ..."
 t = time.time()
-mdl = OVKR_gridsearch(X, y, 5, params)
+#mdl = OVKR_gridsearch(X, y, 5, params)
 elapse_time_grid = time.time()-t #93 sec
 print "... %dsec" % elapse_time_grid
 print "The object selected is : "

@@ -5,8 +5,8 @@
 
 .. moduleauthor:: Tristan Tchilinguirian <tristan.tchilinguirian@ensiie.fr>
 
-Reverse engineering of gene regulatory networks remains a central challenge in computational systems biology, despite recent advances facilitated by benchmark in silico challenges that have aided in calibrating their performance. 
-Nonlinear dynamical models are particularly appropriate for this inference task, given the generation mechanism of the time-series data. We have introduced a novel nonlinear autoregressive model based on operator-valued kernels. 
+Reverse engineering of gene regulatory networks remains a central challenge in computational systems biology, despite recent advances facilitated by benchmark in silico challenges that have aided in calibrating their performance.
+Nonlinear dynamical models are particularly appropriate for this inference task, given the generation mechanism of the time-series data. We have introduced a novel nonlinear autoregressive model based on operator-valued kernels.
 A flexible boosting algorithm (OKVAR-Boost) that shares features from L2-boosting and randomization-based algorithms is developed to perform the tasks of parameter learning and network inference for the proposed model.
 
     * Lim et al., (2013) OKVAR-Boost: a novel boosting algorithm to infer nonlinear dynamics and interactions in gene regulatory networks. Bioinformatics 29 (11):1416-1423.
@@ -23,11 +23,11 @@ def grid_search(data,M,score="AUPR",parameters={},print_step=False):
     """
     Do a search of the best choices of parameter by minimizing the AUPR score with nblocks blocks
     """
-    if score.upper() == "AUROC" : 
+    if score.upper() == "AUROC" :
         s = 0
-    else : 
+    else :
         s = 1
-        
+
     bestscore = 0
     bestmodel = None
     gammadcs=[1e-4]
@@ -42,9 +42,9 @@ def grid_search(data,M,score="AUPR",parameters={},print_step=False):
     jacobian_thresholds = [0.95]
     adj_matrix_thresholds = [0.5]
 
-    if parameters.has_key('gammadc') : 
-        gammadcs = parameters['gammadc'] 
-    if parameters.has_key('gammatr') : 
+    if parameters.has_key('gammadc') :
+        gammadcs = parameters['gammadc']
+    if parameters.has_key('gammatr') :
         gammatrs = parameters['gammatr']
     if parameters.has_key('muH') :
         muHs = parameters['muH']
@@ -64,9 +64,9 @@ def grid_search(data,M,score="AUPR",parameters={},print_step=False):
         jacobian_thresholds = parameters['jacobian_threshold']
     if parameters.has_key('adj_matrix_threshold') :
         adj_matrix_thresholds = parameters['adj_matrix_threshold']
-      
-      
-    for gammadc in gammadcs : 
+
+
+    for gammadc in gammadcs :
         for gammatr in gammatrs :
             for muH in muHs :
                 for muC in muCs :
@@ -74,8 +74,8 @@ def grid_search(data,M,score="AUPR",parameters={},print_step=False):
                         for alpha in alphas :
                             for n_edge_pick in n_edge_picks :
                                 for eps in epss :
-                                    for max_iter in max_iters : 
-                                        for jacobian_threshold in jacobian_thresholds : 
+                                    for max_iter in max_iters :
+                                        for jacobian_threshold in jacobian_thresholds :
                                             for adj_matrix_threshold in adj_matrix_thresholds:
                                                 obj = OKVARboost(gammadc,gammatr,muH,muC,randFrac,alpha,n_edge_pick,eps,max_iter)
                                                 obj.fit(data)
@@ -92,7 +92,7 @@ def grid_search(data,M,score="AUPR",parameters={},print_step=False):
 class OKVARboost(OPERAObject):
     """
     .. class:: OKVARboost
-    
+
     This implements OKVARboost fitting, prediction and score
 
 
@@ -184,7 +184,7 @@ class OKVARboost(OPERAObject):
         out+="\t"+s+"\n"
         #predicted print
         if self.adj_matrix is None : out+="\tthe model is not predicted yet\n"
-        else : 
+        else :
             out+="\tthe model is predicted with : \n"
             out+=item("jacobian threshold : ",self.jacobian_threshold)
             out+=item("consensus threshold : ",self.adj_matrix_threshold)
@@ -194,7 +194,7 @@ class OKVARboost(OPERAObject):
 
     def fit(self,data,print_step=False):
         """Method to fit a model
-        
+
         :param data: Cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
         :type data: ndarray [N,n,d]
         :param print_step: If it is true then displayed to the user the current step on the standard output
@@ -205,14 +205,14 @@ class OKVARboost(OPERAObject):
         N = data.size
         params = np.array([None]*N)
         for i in range(N) :
-            if print_step : 
-                print "data no "+str(i) 
+            if print_step :
+                print "data no "+str(i)
             params[i] = boosting(self,data[i],print_step=print_step)
         self.boosting_param = params
 
     def predict(self,data,jacobian_threshold=0.50,adj_matrix_threshold=0.50):
         """Method to predict a model
-        
+
         :param data: Cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
         :type data: ndarray [N,n,d]
         :param jacobian_threshold: Quantile level of the Jacobian values used to get the adjacency matrix
@@ -238,9 +238,14 @@ class OKVARboost(OPERAObject):
         M = (M>=delta)
         self.adj_matrix=M*1
 
+		#TODO
+		#Pour chaque data{i} :
+		#	fit and predict <- 10fois
+		#	add and threshold
+
     def score(self, data, M, jacobian_threshold=1,adj_matrix_threshold=0.50):
         """Method to give the AUROC and AUPR score a model
-        
+
         :param data: Cell of N array-like, with shape = [n,d], where n is the number of samples and d is the number of features.
         :type data: ndarray [N,n,d]
         :param jacobian_threshold: Quantile level of the Jacobian values used to get the adjacency matrix
@@ -251,10 +256,13 @@ class OKVARboost(OPERAObject):
         :returns: The AUROC and AUPR score of our model with M as true matrix
         :rtype: (float,float)
         """
-        if self.adj_matrix is None : self.predict(data, jacobian_threshold, adj_matrix_threshold)
+        if (self.adj_matrix is None) or not(self.jacobian_threshold==jacobian_threshold) or not(self.adj_matrix_threshold==adj_matrix_threshold) :
+            self.predict(data, jacobian_threshold, adj_matrix_threshold)
         M_vec = np.reshape(self.adj_matrix,self.adj_matrix.size)
         Mvec = np.reshape(M,M.size)
         (self.auroc,self.aupr) = AUC(M_vec,Mvec)
         return (self.auroc,self.aupr)
 
+
+	#def plot_adjacency_matrix
 
