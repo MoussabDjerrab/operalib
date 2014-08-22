@@ -1,19 +1,25 @@
 ## DATA IMPORTATION
-#import os 
+#import os
 import scipy.io
 import time
 from opera.models import OVKR,OVKR_gridsearch
 from opera.utils.plot import plot_err
 from matplotlib import pyplot as plt
 import numpy as np
+from opera import constraint, loss
 
 #os.chdir("/home/lyx/")
 mat = scipy.io.loadmat('simdata.mat')
 X = mat.get('X')
 y = mat.get('Y')
+#banana
+
+
+
+
 
 ## OVKR TEST
-obj = OVKR(muH=0.001,muC_1=0.001,normC='L1')
+obj = OVKR(constraint("lasso", 0.01,0.01))
 
 
 print "Standard tests were performed with this object : \n"
@@ -42,17 +48,18 @@ print "... %dsec" % elapse_time_cv
 print "the object is fitted\n\t training error     \t\t%2.5f\n\t testing error (cv)\t\t%2.5f\n\t sparsity of C      \t%2.2f" % (score_tra,score_cv,float((obj.C == 0).sum())/obj.C.size*100) + '%'
 
 
+
 # grid example
-params = {'gamma' : [0.1,1,10] , 
+params = {'gamma' : [0.1,1,10] ,
           'muH' : [0.1,0.5,0,3,4,5,6,7,8] ,
-          'muC1' : [0.1,0.5,0,3,4,5,6,7,8] , 
-          'muC2' : [0.1,0.5,0,3,4,5,6,7,8] , 
+          'muC1' : [0.1,0.5,0,3,4,5,6,7,8] ,
+          'muC2' : [0.1,0.5,0,3,4,5,6,7,8] ,
           'normC' : ["L1","mixed","elasticnet","sparsemixed"]  }
-print "Grid tests were performed with this parameters : \n\t%s" % params 
+print "Grid tests were performed with this parameters : \n\t%s" % params
 
 print "grid search's computation time ..."
 t = time.time()
-#mdl = OVKR_gridsearch(X, y, 5, params)
+mdl = OVKR_gridsearch(X, y, 5, params)
 elapse_time_grid = time.time()-t #93 sec
 print "... %dsec" % elapse_time_grid
 print "The object selected is : "

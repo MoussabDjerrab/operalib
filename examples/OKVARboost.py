@@ -58,7 +58,7 @@ params = {'gammatr' : [0,1,10] ,
 
 mdl.predict(data,0.1,0.5)
 M = mdl.adj_matrix
-mdl.score(data, M_ref,0.1,0.5)
+mdl.score(data, M_ref,0.45,0.65)
 #mdl.score(data,M_ref)
 
 M_vec = vec(mdl.adj_matrix)
