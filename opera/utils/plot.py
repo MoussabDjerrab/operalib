@@ -69,6 +69,33 @@ def matrix_to_graph(M,name=None,oriented=False,node_shape="o",node_size=1000,fon
     nx.draw(G,labels=labels,with_labels=True,node_shape=node_shape,font_size=font_size,node_size=node_size,node_color=node_color)
     plt.show()
 
+def plot_predicted_graph(G,H=None,name=None,node_shape="o",node_size=1000,font_size=14,node_color="white"):
+    if H is None : return matrix_to_graph(G,name=None,node_shape="o",node_size=1000,font_size=14,node_color="white")
+    G = nx.Graph(G)
+    H = nx.Graph(H)
+    I = nx.intersection(G, H)
+    U = nx.compose(G, H)
+    edge_color=[]
+    edge_style=[]
+    for edge in U.edges() :
+        if edge in I.edges() :
+            edge_color.append("black")
+            edge_style.append("solid")
+        elif edge in H.edges() :
+            edge_color.append("black")
+            edge_style.append("dotted")
+        else :
+            edge_color.append("red")
+            edge_style.append("solid")
+    labels = {}
+    if name is not None :
+        for i in range(len(name)) :
+            labels[i] = str(name[i])
+    else :
+        labels = None
+    nx.draw(U,labels=labels,with_labels=True,node_shape=node_shape,font_size=font_size,node_size=node_size,node_color=node_color,edge_color=edge_color,style=edge_style)
+    plt.show()
+
 def plot_time_series(TS):
     plt.plot(TS)
     plt.show()
