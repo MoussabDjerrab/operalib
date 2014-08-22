@@ -26,7 +26,7 @@ for i in range(10) : l.append("G"+str(i+1));
 labels=np.array(l)
 
 #mdl = OKVARboost(muH = 0.001,muC = 1,gammadc=0,max_iter=100,gammatr=0.2)
-mdl = OKVARboost(muH=0.1,muC=1,gammadc=0,max_iter=4,gammatr=0.2,eps=1e-2)
+mdl = OKVARboost(muH=1,muC=1,gammadc=0,max_iter=4,gammatr=0.2,eps=1e-2)
 print mdl
 #p = mdl.boosting(data[0])
 #J = mdl.jacobian(data[0],p)
