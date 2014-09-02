@@ -14,17 +14,25 @@ class constraint():
         self.weight_partition = weight_partition
         self.gradients_ = []
         self.functions_ = []
+        self.K = None
 
         if reg.upper() == 'L1' or reg.lower() == 'lasso' :
-            self.add_function(lambda x : lambda1*LA.norm(x,1),False)
+            self.add_function(lambda x : lambda1*LA.norm(x,1),
+                              False)
         elif reg.upper() == 'L2' :
-            self.add_function(lambda x : lambda2*LA.norm(x,2),False)
+            self.add_function(lambda x : lambda2*LA.norm(x,2),
+                              True,
+                              lambda x : lambda2*np.dot(self.K,x))
         elif reg.lower() == 'elasticnet'or reg.lower() == 'elastic net' :
-            self.add_function(lambda x : lambda1*LA.norm(x,1) + lambda2*LA.norm(x,2) ,False)
+            self.add_function(lambda x : lambda1*LA.norm(x,1) + lambda2*LA.norm(x,2),
+                              True,
+                              lambda x : lambda2*np.dot(self.K,x))
         elif reg.lower() == 'mixed' or reg.lower() == 'grouplasso'or reg.lower() == 'group lasso' :
-            self.add_function(lambda x : fun_mixed(x,lambda1,partition,weight_partition) ,False)
+            self.add_function(lambda x : fun_mixed(x,lambda1,partition,weight_partition) ,
+                              False)
         elif reg.lower() == 'sparsemixed' or reg.lower() == 'sparsegrouplasso'or reg.lower() == 'sparse group lasso' or reg.lower() == 'sparse mixed' :
-            self.add_function(lambda x : lambda1*LA.norm(x,1) + fun_mixed(x,lambda2,partition,weight_partition) ,False)
+            self.add_function(lambda x : lambda1*LA.norm(x,1) + fun_mixed(x,lambda2,partition,weight_partition) ,
+                              False)
 
     def __repr__(self):
         "Constraint : < "+self.reg+">"

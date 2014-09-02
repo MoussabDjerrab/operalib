@@ -44,16 +44,16 @@ def plot(data,labels):
         y = data[i][1]
         plt.plot(x,y,color(labels[i]))
 
-#plot(data,labels)
-#plt.show()
+plot(data,labels)
+plt.show()
 
 
 
 obj = OVKR(kernel(),constraint("lasso", 1),loss())
 obj.fit(data,labels)
 n_labels = (obj.predict(data)>=0.5)
-#plot(data,n_labels)
-#plt.show()
+plot(data,n_labels)
+plt.show()
 s = obj.score(data,labels)
 s
 

@@ -4,10 +4,11 @@ from dclin   import dclin
 from trgauss import trgauss
 from trpoly  import trpoly
 from trlin   import trlin
+from gramMatrix import f1_gramMatrix as gramMatrix
 import numpy as np
 
 class Kernel():
-    def __init__(self,ovker="dc",ker="gauss",c=1,d=3,gamma=1,B="identity") :
+    def __init__(self,ovker="dc",ker="gauss",c=1,d=3,gamma=1,B="identity",gammadc=None,gammatr=None) :
         """ Choose a self.ker function
         n is the number of column of y
         self.ovker is :
@@ -34,6 +35,10 @@ class Kernel():
         self.d = d
         self.gamma = gamma
         self.B = B
+        if gammadc is None : self.gammadc = gamma
+        else : self.gammadc = gammadc
+        if gammatr is None : self.gammatr = gamma
+        else : self.gammatr = gammatr
         self.K = None
         self.f = fun_matrix(self)
     def copy(self):
@@ -71,6 +76,9 @@ def fun_matrix(obj):
             def f(X1,X2,y): return trpoly(X1,X2,obj.c,obj.d)
         elif obj.ker.__class__ == np.ndarray :
             def f(X1,X2,y): return obj.ker.copy()
+    elif obj.ovker == "mixed" or obj.ovker == "gram":
+        if obj.ker == "gauss" or obj.ker == None :
+            def f(X1,X2,y): return gramMatrix(X1,X2,createB(y,obj.B),obj.gammadc,obj.gammatr)
     elif obj.ovker.__class__ == np.ndarray :
         def f(X1,X2,y): return obj.ovker.copy()
     return f
@@ -89,6 +97,8 @@ def createB(y,B="identity"):
     elif B == "cov" :
         B = np.cov(y)
     elif B.shape[0]==B.shape[1] and B.shape[0]==y.shape[0] :
+        B = B.copy()
+    elif B.__class__ is np.ndarray :
         B = B.copy()
     else : print "Error in self.ker, B is not in the good format"
     #elif B == "learn" :

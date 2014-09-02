@@ -2,7 +2,7 @@
 #import os
 import scipy.io
 import time
-from opera.models import OVKR,OVKR_gridsearch
+from opera.models import OVKR
 from opera.utils.plot import plot_err
 from matplotlib import pyplot as plt
 import numpy as np

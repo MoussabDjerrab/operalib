@@ -93,10 +93,12 @@ def proximalLinear(K, y, Constraints, Loss=None,init=None, maxiters=100, eps=Non
     if init is None :
         init = np.linalg.solve(K + lambda2*np.identity(K.shape[0]), y)
 
-    if Loss is None : Loss = loss()
-    f = lambda x : LA.norm(y-np.dot(K,x),2)**2
-    fprime = lambda x : 2*np.dot(K,y-np.dot(K,x))
-    Loss.add_function(f,fprime)
+    if Loss is None :
+        Loss = loss()
+        f = lambda x : LA.norm(y-np.dot(K,x),2)**2
+        fprime = lambda x : np.dot(K,np.dot(K,x)-y)
+        Loss.add_function(f,fprime)
+    Constraints.K = K
 
     return proximal(Loss, Constraints, init, L, maxiters, eps)
 
