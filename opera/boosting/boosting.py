@@ -123,8 +123,10 @@ def boosting(obj,X,y=None,print_step=False):
         L = np.diag(np.sum(W_m_sub,axis=0)) - W_m_sub
         B_m = sLA.expm(betaParam * L)
         obj.kernel.B = B_m
+        #
         param[m] = OKVAR(obj.kernel,obj.constraint)
         param[m].beta = obj.beta
+        # TODO corect (added some words)
         param[m].fit(U_m[:,idx_rand_m],True)
         param[m].kernel.K = kernels.gramMatrix(U_m[:,idx_rand_m],U_m[:,idx_rand_m],B_m,obj.kernel.gammadc,obj.kernel.gammatr)
         param[m].C = prox(K=param[m].kernel.K, y=np.reshape(U_m[:,idx_rand_m].T,(param[m].kernel.K.shape[0],1)), Constraints=obj.constraint,maxiters=100)

@@ -11,7 +11,7 @@ M_ref = np.abs(mat["Ref"])
 
 obj = OKVAR(kernel(),constraint("lasso", 1))
 obj.fit(data)
-yt = obj.predict(data[0,:],range(10))
+yt = obj.predict(data)
 
 obj.score(data[:,1:],data[:,:20])
 

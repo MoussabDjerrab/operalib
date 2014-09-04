@@ -5,10 +5,7 @@
 
 .. moduleauthor:: Tristan Tchilinguirian <tristan.tchilinguirian@ensiie.fr>
 
-Link prediction is addressed as an output kernel learning task through semi-supervised Output Kernel Regression.
-Working in the framework of RKHS theory with vector-valued functions, we establish a new representer theorem devoted to semi-supervised least square regression. We then apply it to get a new model (POKR: Penalized Output Kernel Regression) and show its relevance using numerical experiments on artificial networks and two real applications using a very low percentage of labeled data in a transductive setting.
-
-    * Celine Bouard, Florence d'Alche-Buc and Marie Szafranski (2011) Semi-Supervized Penalized Output Kernel Regression for Link Prediction. In ICML 2011.
+Some words
 '''
 
 from .OPERAObject import OPERAObject
@@ -21,11 +18,11 @@ class OVKR(OPERAObject):
     Performs OVK regression over parameter ranges, cross-validation, etc.
 
     :param kernel:
-    :type opera.kernels.Kernel
+    :type kernel: opera.kernels.Kernel
     :param constraint:
-    :type opera.constraint
+    :type constraint: opera.constraint
     :param loss:
-    :type opera.loss
+    :type loss: opera.loss
     """
 
     def __init__(self, kernel, constraint, loss = None):
@@ -49,10 +46,10 @@ class OVKR(OPERAObject):
     def fit(self, X, y):
         """Method to fit a model
 
-        :param: array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
-        :type: ndarray
-        :param: array, with shape = [N,p], where N is the number of samples.
-        :type: ndarray
+        :param X:  individuals with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type X: numpy.array
+        :param y: class with shape = [N,p], where N is the number of samples.
+        :type y: numpy.array
         """
         OPERAObject.fit(self, X, y)
         # compute the kernel
@@ -66,10 +63,10 @@ class OVKR(OPERAObject):
     def predict(self,X):
         """Method to predict theclust of a data
 
-        :param: array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
-        :type: ndarray
-        :returns: array, with shape = [N,p], where N is the number of samples.
-        :rtype: ndarray
+        :param X:  individuals with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type X: numpy.array
+        :returns: predicted class with shape = [N,p], where N is the number of samples.
+        :rtype: numpy.array
         """
         Ktest = self.kernel.compute_matrix(X,self.datas,self.labels,False)
         Cvec = np.reshape(self.C.T, (len(self.C[:,0])*len(self.C[0,:])))
@@ -81,10 +78,10 @@ class OVKR(OPERAObject):
         """Method to give a score of a model
         A model that can give a goodness of fit measure or a likelihood of unseen data, implements (higher is better):
 
-        :param: array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
-        :type: ndarray
-        :param: array, with shape = [N,p], where N is the number of samples.
-        :type: ndarray
+        :param X:  individuals with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type X: numpy.array
+        :param y: true class with shape = [N,p], where N is the number of samples.
+        :type y: numpy.array
         :returns: The score of our model
         :rtype: float
         """

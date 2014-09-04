@@ -1,3 +1,13 @@
+'''
+.. module:: OVKR
+   :platform: Unix, Windows
+   :synopsis: module to performs an OVKR
+
+.. moduleauthor:: Tristan Tchilinguirian <tristan.tchilinguirian@ensiie.fr>
+
+some words
+'''
+
 from .OVKR import OVKR
 import numpy as np
 from opera.utils.conditionalIndependence import conditionalIndependence
@@ -6,14 +16,14 @@ import scipy.linalg as LA
 
 class OKVAR(OVKR):
     """
-    Performs OVK regression over parameter ranges, cross-validation, etc.
+    Performs OKVAR regression over parameter ranges, cross-validation, etc.
 
     :param kernel:
-    :type opera.kernels.Kernel
+    :type kernel: opera.kernels.Kernel
     :param constraint:
-    :type opera.constraint
+    :type constraint: opera.constraint
     :param loss:
-    :type opera.loss
+    :type loss: opera.loss
     """
 
     def __init__(self, kernel, constraint, loss = None):
@@ -51,6 +61,11 @@ class OKVAR(OVKR):
         return OKVAR(self.kernel.copy(),self.constraint.copy(),self.loss.copy())
 
     def fit(self,TS,allvec=False):
+        """Method to fit a model
+
+        :param TS:  Diferrent Time series with shape = [N, t], where N is the number of samples and t is the number of time.
+        :type TS: numpy.array
+        """
         if allvec :
             X = TS.copy()
             y = X.copy()
@@ -59,4 +74,15 @@ class OKVAR(OVKR):
             X = TS[:n-1,:]
             y = TS[1:,:]
         OVKR.fit(self, X, y)
+
+    def predict(self,TS):
+        """Method to predict the next time series
+
+        :param TS:  Different Time series with shape = [N, t], where N is the number of samples and t is the number of time.
+        :type TS: numpy.array
+        :returns: If TS are :math:`X_{i}\\cdots X{n}` then the return are :math:`X_{i+1}\\cdots X{n+1}`
+        :rtype: numpy.array
+        """
+        # todo : check if its works
+        super(OKVAR,self).predict(TS)
 
